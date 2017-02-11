@@ -1,0 +1,16 @@
+<resources>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+
+    <!-- activity_tt_list.xml -->
+    <dimen name="list_item_content_margin">4dp</dimen>
+    <dimen name="margin_between_items">8dp</dimen>
+
+    <!-- add_detail_layout -->
+    <dimen name="margin_between_keywords">4dp</dimen>
+    <dimen name="margin_content">8dp</dimen>
+
+</resources>

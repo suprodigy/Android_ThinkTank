@@ -1,0 +1,24 @@
+<resources>
+
+    <string name="app_name">ThinkTank</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TTMainActivity -->
+    <string name="keyword_input_hint">키워드를 입력하세요.</string>
+
+    <!-- TTListActivity -->
+    <string name="korean_lorem_ipsum">이 헌법은 1988년 2월 25일부터 시행한다. 다만, 이 헌법을 시행하기 위하여 필요한 법률의 제정·개정과 이 헌법에 의한 대통령 및 국회의원의 선거 기타 이 헌법시행에 관한 준비는 이 헌법시행 전에 할 수 있다.</string>
+    <string name="action_search">검색</string>
+
+    <!-- TTAddActivity -->
+    <string name="keyword_hint1">#키워드1</string>
+    <string name="keyword_hint2">#키워드2</string>
+    <string name="keyword_hint3">#키워드3</string>
+    <string name="content_hint">메모를 입력하세요.</string>
+
+    <!-- TTDetailActivity -->
+    <string name="image_menu">사진 추가</string>
+    <string name="share_menu">메모 공유</string>
+    <string name="delete_menu">메모 삭제</string>
+
+</resources>

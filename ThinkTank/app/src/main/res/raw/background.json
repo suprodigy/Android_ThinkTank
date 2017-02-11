@@ -1,0 +1,14 @@
+{
+    "baselineGridVisible": true,
+    "baselineGridCellSize": 8,
+    "keylines": [
+        { "offset": 16,
+          "from": "TOP" },
+        { "offset": 16,
+          "from": "LEFT" },
+        { "offset": 16,
+          "from": "RIGHT" },
+        { "offset": 16,
+          "from": "BOTTOM" }
+    ]
+}
