@@ -43,13 +43,15 @@
                 android:id="@+id/keyword_input"
                 android:hint="@string/keyword_input_hint"
                 android:layout_width="200dp"
-                android:layout_height="match_parent"/>
+                android:layout_height="wrap_content"/>
 
             <ImageButton
                 android:id="@+id/keyword_search_button"
                 android:src="@drawable/ic_keyword_search"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:contentDescription="@string/search_content_description"
+                android:background="@android:color/transparent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
 
         </LinearLayout>
 
@@ -66,7 +68,7 @@
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/add_think_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"

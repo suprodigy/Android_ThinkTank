@@ -12,12 +12,49 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".TTDetailActivity">
 
-    <include layout="@layout/add_detail_layout"/>
+    <RelativeLayout
+        android:padding="@dimen/margin_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/add_tag_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            app:srcCompat="@drawable/icon_tag_add"/>
+
+        <TextView
+            android:id="@+id/think_keyword"
+            android:layout_toLeftOf="@id/add_tag_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_keyword"
+            android:textColor="@color/blue"
+            android:textSize="20sp"/>
+
+        <EditText
+            android:id="@+id/think_content"
+            android:layout_below="@id/think_keyword"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:hint="@string/content_hint"
+            android:textSize="16sp"
+            android:background="@android:color/transparent"
+            android:gravity="top"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </RelativeLayout>
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"

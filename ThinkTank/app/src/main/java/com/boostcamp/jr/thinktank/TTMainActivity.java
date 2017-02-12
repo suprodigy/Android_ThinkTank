@@ -11,14 +11,18 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+// TODO (6) Calligraphy library 이용하기
+// TODO (7) DesignSpec API 레벨 호환성 해결하기
+// TODO (8) Keyword 관계도 구현 (KeywordManager.java)
+
 public class TTMainActivity extends AppCompatActivity {
 
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
-    @OnClick(R.id.fab)
-    public void onFabButtonClicked() {
-        Intent intent = new Intent(this, TTAddActivity.class);
+    @OnClick(R.id.add_think_button)
+    public void onAddButtonClicked() {
+        Intent intent = new Intent(this, TTDetailActivity.class);
         startActivity(intent);
     }
 

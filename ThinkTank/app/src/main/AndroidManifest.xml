@@ -27,10 +27,6 @@
             android:parentActivityName=".TTMainActivity"/>
 
         <activity
-            android:name=".TTAddActivity"
-            android:parentActivityName=".TTMainActivity"/>
-
-        <activity
             android:name=".TTDetailActivity"/>
 
     </application>

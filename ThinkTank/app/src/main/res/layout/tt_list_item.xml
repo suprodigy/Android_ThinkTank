@@ -26,6 +26,7 @@
                 tools:text="#헌법 #국회의원"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:textColor="@color/blue"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 

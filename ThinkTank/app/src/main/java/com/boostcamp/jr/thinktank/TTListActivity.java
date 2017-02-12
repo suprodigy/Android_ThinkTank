@@ -116,8 +116,7 @@ public class TTListActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(getApplicationContext(), TTDetailActivity.class);
-            intent.putExtra("position", getAdapterPosition());
+            Intent intent = TTDetailActivity.newIntent(getApplicationContext(), getAdapterPosition());
             startActivity(intent);
         }
     }
