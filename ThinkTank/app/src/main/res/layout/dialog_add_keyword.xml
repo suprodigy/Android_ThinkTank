@@ -1,23 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_margin="@dimen/margin_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingPrefix"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:hint="@string/keyword_edit_text"
-        android:gravity="center_horizontal"
-        android:id="@+id/keyword_edit_text"
+    <TextView
+        android:background="@color/colorPrimary"
+        android:padding="@dimen/title_padding"
+        android:text="@string/add_dialog_title"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <FrameLayout
+    <LinearLayout
         android:layout_marginTop="@dimen/margin_between_items"
+        android:padding="@dimen/margin_content"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </FrameLayout>
+        <com.github.florent37.materialtextfield.MaterialTextField
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:mtf_image="@drawable/hashtag"
+            app:mtf_labelColor="@color/colorPrimaryDark"
+            app:mtf_backgroundColor="@color/colorAccentLight">
+
+            <EditText
+                android:id="@+id/keyword_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="30sp"
+                android:hint="@string/keyword_edit_text"/>
+
+        </com.github.florent37.materialtextfield.MaterialTextField>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/margin_between_items">
+
+        </FrameLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

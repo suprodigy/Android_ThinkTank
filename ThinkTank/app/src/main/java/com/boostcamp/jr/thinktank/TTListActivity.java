@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -28,7 +27,7 @@ import butterknife.ButterKnife;
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmRecyclerViewAdapter;
 
-public class TTListActivity extends AppCompatActivity {
+public class TTListActivity extends MyActivity {
 
     private TTAdapter mAdapter;
 
@@ -48,6 +47,7 @@ public class TTListActivity extends AppCompatActivity {
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         setSwipeEvent();
     }
@@ -92,14 +92,17 @@ public class TTListActivity extends AppCompatActivity {
         @BindView(R.id.list_item_background)
         View mBackground;
 
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         public TTHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
 
             DesignSpec background = DesignSpec.fromResource(mBackground, R.raw.list_item_background);
-            mBackground.getOverlay().add(background);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                mBackground.getOverlay().add(background);
+            } else {
+                mBackground.setBackground(background);
+            }
         }
 
         public void bindThinkItem(ThinkItem item) {

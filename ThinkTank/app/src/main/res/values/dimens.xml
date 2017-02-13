@@ -9,8 +9,11 @@
     <dimen name="list_item_content_margin">4dp</dimen>
     <dimen name="margin_between_items">8dp</dimen>
 
-    <!-- add_detail_layout -->
+    <!-- detail_layout -->
     <dimen name="margin_between_keywords">4dp</dimen>
     <dimen name="margin_content">8dp</dimen>
+
+    <!-- dialog -->
+    <dimen name="title_padding">16dp</dimen>
 
 </resources>

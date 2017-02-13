@@ -2,23 +2,25 @@ package com.boostcamp.jr.thinktank;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-// TODO (6) Calligraphy library 이용하기
-// TODO (7) DesignSpec API 레벨 호환성 해결하기
-// TODO (8) Keyword 관계도 구현 (KeywordManager.java)
+// DONE (6) Calligraphy library 이용하기
+// DONE (7) DesignSpec API 레벨 호환성 해결하기
+// TODO (9) Keyword 관계도 구현 (KeywordManager.java) - TestData로 테스트
 
-public class TTMainActivity extends AppCompatActivity {
+public class TTMainActivity extends MyActivity {
 
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
+    @BindView(R.id.toolbar_title)
+    TextView mTitle;
 
     @OnClick(R.id.add_think_button)
     public void onAddButtonClicked() {
@@ -36,9 +38,9 @@ public class TTMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tt_main);
-
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 
     @Override
@@ -57,4 +59,5 @@ public class TTMainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }

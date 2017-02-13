@@ -11,6 +11,23 @@
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:textViewStyle">@style/AppTheme.Widget.TextView</item>
+        <item name="android:editTextStyle">@style/AppTheme.Widget.EditText</item>
+        <item name="android:checkboxStyle">@style/AppTheme.Widget.CheckBox</item>
+    </style>
+
+    <style name="AppTheme.Widget"/>
+
+    <style name="AppTheme.Widget.TextView" parent="android:Widget.Holo.Light.TextView">
+        <item name="fontPath">fonts/NanumBarunGothic.ttf</item>
+    </style>
+
+    <style name="AppTheme.Widget.EditText" parent="android:Widget.Holo.Light.EditText">
+        <item name="fontPath">fonts/NanumPen.ttf</item>
+    </style>
+
+    <style name="AppTheme.Widget.CheckBox" parent="android:Widget.Holo.Light.CompoundButton.CheckBox">
+        <item name="android:textSize">30sp</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
