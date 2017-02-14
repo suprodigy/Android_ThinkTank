@@ -14,7 +14,7 @@
     <FrameLayout
         android:id="@+id/list_item_background"
         android:layout_width="match_parent"
-        android:layout_height="140dp">
+        android:layout_height="165dp">
 
         <LinearLayout
             android:layout_margin="@dimen/margin_between_items"
@@ -39,7 +39,14 @@
                 android:textSize="22sp"
                 fontPath="fonts/NanumPen.ttf"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="100dp"/>
+
+            <TextView
+                android:id="@+id/list_item_date"
+                android:gravity="end"
+                android:layout_marginTop="@dimen/list_item_content_margin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
         </LinearLayout>
 

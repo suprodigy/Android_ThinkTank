@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,6 +29,7 @@ import com.github.clans.fab.FloatingActionButton;
 import org.lucasr.dspec.DesignSpec;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -38,18 +40,27 @@ import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// DONE (1) Add/Detail activity 합치기
-// DONE (2) 빈 문자열 처리
-// DONE (3) Keyword View 수정 - KeywordAddDialog 추가
-// DONE (4) keyword 앞에 '#' 중복으로 쓰는 경우 처리
-// DONE (5) 삭제하는 경우 KeywordItem count field update - KeywordDeleteDialog 추가
-// TODO (8) 키워드 Delete bug 수정(업데이트 시 Count 계속 다운 가능), DeleteDialog 수정
-// TODO (10) 키워드 추출 기능 추가 (Retrofit 이용)
-// TODO (11) Content 꾸미기 기능 추가 (Spannable)
-// TODO (12) 사진 추가 기능 추가
+// DONE (1) 키워드 Delete bug 수정(업데이트 시 Count 계속 다운 가능), DeleteDialog 수정
+// DONE (2) ThinkItem Field(Date) 추가
+// DONE (3) UPDATE 버그 수정
+// TODO (5) 키워드 추출 기능 추가 (Retrofit 이용)
+// TODO (6) Content 꾸미기 기능 추가 (Spannable)
+// TODO (7) 사진 추가 기능 추가
+// TODO (8) keyword 추가/삭제 UX 수정 - Click/LongClick(?)
+
+
+/**
+ *
+ * 메모 추가/수정 작업 동시에 처리하게 구현
+ * Intent를 통해 넘어온 Extra가 없으면 -> 메모 추가 작업
+ * Intent를 통해 넘어온 Extra가 있으면 -> 메모 수정 작업
+ *
+ */
 
 public class TTDetailActivity extends MyActivity {
 
+    // TTListActivity가 newIntent 메소드를 통해 TTDetailActivity를 부르는 Intent를 얻음
+    // EXTRA_POSITION은 Intent Extra의 Key 값
     public static final String EXTRA_POSITION = "com.boostcamp.jr.thinktank.position";
 
     public static Intent newIntent(Context packageContext, int position) {
@@ -58,13 +69,16 @@ public class TTDetailActivity extends MyActivity {
         return intent;
     }
 
+    // Log 찍기 위해 정의한 상수
     private static final String TAG = "TTDetailActivity";
 
+    // Fields...
     private ThinkItem mThinkItem;
     private boolean mDeleted;
     private boolean mIsAdded;
-    private List<String> mKeywordStrings = new ArrayList<>();
+    private List<Pair<String, Boolean>> mKeywordStrings = new ArrayList<>();
 
+    // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
 
     @BindView(R.id.toolbar)
@@ -98,6 +112,11 @@ public class TTDetailActivity extends MyActivity {
             showAddTagDialog();
         }
     }
+
+    /**
+     * 태그를 추가하기 위한 대화상자를 띄움.
+     * 대화 상자에서 확인 버튼을 눌렀을 때, Empty String이 입력되지 않았으면 getKeywordFromDialog() 호출
+     */
 
     private void showAddTagDialog() {
         View v = getLayoutInflater().inflate(R.layout.dialog_add_keyword, null);
@@ -165,10 +184,12 @@ public class TTDetailActivity extends MyActivity {
         } else {
             LinearLayout layoutForCheckbox = (LinearLayout) v.findViewById(R.id.layout_for_checkbox);
 
-            for (String keyword : mKeywordStrings) {
+            for (Pair<String, Boolean> pair : mKeywordStrings) {
+                String keyword = pair.first;
                 CheckBox checkBox = new CheckBox(this);
                 checkBox.setPadding(8, 32, 8, 32);
-                checkBox.setText(keyword);
+                checkBox.setText("#" + keyword);
+                checkBox.setTextColor(getResources().getColor(R.color.blue));
                 CalligraphyUtils.applyFontToTextView(this, checkBox, "fonts/NanumPen.ttf");
                 checkBoxes.add(checkBox);
                 layoutForCheckbox.addView(checkBox);
@@ -198,21 +219,25 @@ public class TTDetailActivity extends MyActivity {
     }
 
     private void onKeywordDeleted(List<CheckBox> checkBoxes) {
-        for (CheckBox checkBox : checkBoxes) {
+        for (int i=0; i<checkBoxes.size(); i++) {
+            CheckBox checkBox = checkBoxes.get(i);
             if (checkBox.isChecked()) {
                 String keywordName = checkBox.getText().toString();
+                keywordName = KeywordUtil.removeTag(keywordName);
 
-                if (mIsAdded) {
+                if (mKeywordStrings.get(i).second) {
                     KeywordObserver keywordObserver = KeywordObserver.get();
-                    try {
-                        KeywordItem item = keywordObserver
-                                .getCopiedObject(keywordObserver.getKeywordByName(keywordName));
-                        item.setCount(item.getCount() - 1);
-                        keywordObserver.update(item);
-                    } catch (IllegalArgumentException e) {}
+                    KeywordItem item = keywordObserver
+                            .getCopiedObject(keywordObserver.getKeywordByName(keywordName));
+                    item.setCount(item.getCount() - 1);
+                    keywordObserver.update(item);
                 }
-
-                mKeywordStrings.remove(keywordName);
+            }
+        }
+        for (int i=checkBoxes.size()-1; i>=0; i--) {
+            CheckBox checkBox = checkBoxes.get(i);
+            if (checkBox.isChecked()) {
+                mKeywordStrings.remove(i);
             }
         }
         setKeywordTextView();
@@ -225,9 +250,9 @@ public class TTDetailActivity extends MyActivity {
         ButterKnife.bind(this);
 
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         try {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         } catch (NullPointerException e) {
             Log.e(TAG, "No action bar in " + TAG);
@@ -274,7 +299,9 @@ public class TTDetailActivity extends MyActivity {
     private void setView() {
         RealmList<KeywordItem> keywordsInItem = mThinkItem.getKeywords();
         for(KeywordItem keyword : keywordsInItem) {
-            mKeywordStrings.add(keyword.getName());
+            String keywordName = keyword.getName();
+            Pair<String, Boolean> temp = new Pair<>(keywordName, true);
+            mKeywordStrings.add(temp);
         }
         setKeywordTextView();
         mContentEditText.setText(mThinkItem.getContent());
@@ -307,9 +334,11 @@ public class TTDetailActivity extends MyActivity {
         }
 
         RealmList<KeywordItem> keywords = new RealmList<>();
-        for (String keyword : mKeywordStrings) {
-            KeywordManager.get().createOrUpdateKeyword(keyword);
-            keywords.add(KeywordObserver.get().getKeywordByName(keyword));
+        for (Pair<String, Boolean> keyword : mKeywordStrings) {
+            if (!keyword.second) {
+                KeywordManager.get().createOrUpdateKeyword(keyword.first);
+            }
+            keywords.add(KeywordObserver.get().getKeywordByName(keyword.first));
         }
         mThinkItem.setKeywords(keywords);
 
@@ -317,6 +346,7 @@ public class TTDetailActivity extends MyActivity {
         if (!mIsAdded) {
             thinkObserver.insert(mThinkItem);
         } else if (!mDeleted) {
+            mThinkItem.setDateUpdated(new Date());
             thinkObserver.update(mThinkItem);
         }
     }
@@ -330,17 +360,28 @@ public class TTDetailActivity extends MyActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * "#" 제거 후 String이 비어있지 않으면 mKeywordStrings List에 추가 후,
+     * textView reset을 위해 setKeywordTextView() 호출
+     */
+
     public void getKeywordFromDialog(String keyword) {
         if (keyword.length() != 0) {
-            mKeywordStrings.add(keyword);
+            mKeywordStrings.add(new Pair<>(keyword, false));
             setKeywordTextView();
         }
     }
 
+    /**
+     * 멤버 변수인 mKeywordStrings가 keyword로 추가된 String을 유지하고 있고,
+     * "#" 추가 후 textView에 set!
+     * (키워드가 없으면 안내 문자열로 set!) - R.string.no_keyword
+     */
+
     private void setKeywordTextView() {
         String keywordString = "";
-        for (String string : mKeywordStrings) {
-            keywordString += "#" + string + " ";
+        for (Pair<String, Boolean> keyword : mKeywordStrings) {
+            keywordString += "#" + keyword.first + " ";
         }
 
         if (keywordString.equals("")) {

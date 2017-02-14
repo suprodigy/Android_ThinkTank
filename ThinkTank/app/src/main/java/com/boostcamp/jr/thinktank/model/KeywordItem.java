@@ -23,7 +23,7 @@ public class KeywordItem extends RealmObject {
         this.id = id;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 

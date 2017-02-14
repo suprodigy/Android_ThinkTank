@@ -11,6 +11,7 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class MyActivity extends AppCompatActivity {
 
+    // Calligraphy library 사용을 위한 코드
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));

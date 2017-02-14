@@ -66,10 +66,11 @@ public class KeywordObserver {
     }
 
     public OrderedRealmCollection<KeywordItem> selectAll() {
-        return mRealm.where(KeywordItem.class).findAllSortedAsync("id");
+        return mRealm.where(KeywordItem.class).findAllSorted("id");
     }
 
     public KeywordItem getCopiedObject(KeywordItem src) {
         return mRealm.copyFromRealm(src);
     }
+
 }

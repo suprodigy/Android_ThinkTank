@@ -4,11 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordItem;
+import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
 
@@ -50,6 +52,13 @@ public class TTListActivity extends MyActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         setSwipeEvent();
+
+        /* for text */
+        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
+        Log.d("TTListActivity", "onCreate() : " + list.size());
+        for(KeywordItem item : list) {
+            Log.d("TTListActivity", item.getName() + ", " + item.getCount());
+        }
     }
 
     private void setRecyclerView() {
@@ -89,6 +98,9 @@ public class TTListActivity extends MyActivity {
         @BindView(R.id.list_item_content)
         TextView mContent;
 
+        @BindView(R.id.list_item_date)
+        TextView mDate;
+
         @BindView(R.id.list_item_background)
         View mBackground;
 
@@ -109,12 +121,13 @@ public class TTListActivity extends MyActivity {
             mThinkItem = item;
 
             String keywords = "";
-            for(KeywordItem keyword : item.getKeywords()) {
+            for(KeywordItem keyword : mThinkItem.getKeywords()) {
                 keywords += "#" + keyword.getName() + " ";
             }
             mKeywords.setText(keywords);
 
-            mContent.setText(item.getContent());
+            mContent.setText(mThinkItem.getContent());
+            mDate.setText(DateFormat.format("MMM d EEEE, yyyy", mThinkItem.getDateUpdated()));
         }
 
         @Override
@@ -133,7 +146,6 @@ public class TTListActivity extends MyActivity {
             mContext = context;
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
         public TTHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(mContext);

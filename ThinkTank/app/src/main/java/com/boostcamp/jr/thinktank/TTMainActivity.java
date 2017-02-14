@@ -11,9 +11,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-// DONE (6) Calligraphy library 이용하기
-// DONE (7) DesignSpec API 레벨 호환성 해결하기
-// TODO (9) Keyword 관계도 구현 (KeywordManager.java) - TestData로 테스트
+// TODO (4) Keyword 관계도 구현 (KeywordManager.java) - TestData로 테스트
 
 public class TTMainActivity extends MyActivity {
 
@@ -39,7 +37,10 @@ public class TTMainActivity extends MyActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tt_main);
         ButterKnife.bind(this);
+
         setSupportActionBar(mToolbar);
+
+        // 제목 없애기
         getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 

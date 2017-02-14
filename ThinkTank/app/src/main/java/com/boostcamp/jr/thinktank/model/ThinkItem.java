@@ -4,6 +4,7 @@ package com.boostcamp.jr.thinktank.model;
  * Created by jr on 2017-02-12.
  */
 
+import java.util.Date;
 import java.util.UUID;
 
 import io.realm.RealmList;
@@ -20,6 +21,7 @@ public class ThinkItem extends RealmObject {
     private String id;
     private String content;
     private RealmList<KeywordItem> keywords;
+    private Date dateUpdated;
 
     public ThinkItem() {
         this(UUID.randomUUID());
@@ -27,6 +29,7 @@ public class ThinkItem extends RealmObject {
 
     private ThinkItem(UUID id) {
         this.id = id.toString();
+        this.dateUpdated = new Date();
     }
 
     public String getId() {
@@ -49,6 +52,14 @@ public class ThinkItem extends RealmObject {
     public ThinkItem setKeywords(RealmList<KeywordItem> keywords) {
         this.keywords = keywords;
         return this;
+    }
+
+    public void setDateUpdated(Date dateUpdated) {
+        this.dateUpdated = dateUpdated;
+    }
+
+    public Date getDateUpdated() {
+        return dateUpdated;
     }
 
 }
