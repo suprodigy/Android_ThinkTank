@@ -24,7 +24,15 @@ public class ResponseFromNaver {
         this.count = count;
     }
 
-    private class Item {
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(List<Item> items) {
+        this.items = items;
+    }
+
+    public class Item {
 
         @SerializedName("title")
         private String title;

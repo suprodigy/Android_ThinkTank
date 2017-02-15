@@ -77,7 +77,7 @@ public class KeywordUtil {
      * @param minMaxCount: BFS의 결과로 나온 keyword의 List에서 count 최소값과 최대값
      * @return min, max에 대해 count의 상대적인 크기를 구함
      *
-     * textSize는 15sp~40sp 사이의 값으로 제한
+     * textSize는 12sp~40sp 사이의 값으로 제한
      *
      */
     public static float getTextSize(int count, Pair<Integer, Integer> minMaxCount) {
@@ -85,12 +85,12 @@ public class KeywordUtil {
         int min = minMaxCount.first, max = minMaxCount.second;
 
         if (min == max) {
-            return (40 + 15) / 2;
+            return (40 + 12) / 2;
         } else {
 
             // y = ax + b (y: textSize, x: keyword.getCount())
-            float a = 25 / (max - min);
-            float b = 15 - a * min;
+            float a = 28 / (max - min);
+            float b = 12 - a * min;
 
             return a * count + b;
         }

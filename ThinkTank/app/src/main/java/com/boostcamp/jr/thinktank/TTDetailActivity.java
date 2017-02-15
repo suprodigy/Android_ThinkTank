@@ -2,6 +2,7 @@ package com.boostcamp.jr.thinktank;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.util.Pair;
@@ -23,6 +24,9 @@ import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
+import com.boostcamp.jr.thinktank.network.NaverRestClient;
+import com.boostcamp.jr.thinktank.network.NaverRestClient.KeywordService;
+import com.boostcamp.jr.thinktank.network.ResponseFromNaver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.github.clans.fab.FloatingActionButton;
 
@@ -38,6 +42,9 @@ import butterknife.OnClick;
 import butterknife.OnLongClick;
 import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (1) 키워드 추출 기능 추가 (Retrofit 이용)
@@ -333,6 +340,10 @@ public class TTDetailActivity extends MyActivity {
             return;
         }
 
+        if (mKeywordStrings.size() == 0) {
+            new GetKeywordTask().execute(content);
+        }
+
         RealmList<KeywordItem> keywords = new RealmList<>();
         for (Pair<String, Boolean> keyword : mKeywordStrings) {
             if (!keyword.second) {
@@ -389,6 +400,76 @@ public class TTDetailActivity extends MyActivity {
         }
 
         mKeywordTextView.setText(keywordString);
+    }
+
+    private class GetKeywordTask extends AsyncTask<String, Void, String> {
+
+        Context mContext;
+
+        List<String> mNouns;
+
+        @Override
+        protected void onPreExecute() {
+            mContext = getApplicationContext();
+            Toast.makeText(mContext, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext,
+                    getString(R.string.explain_get_keyword_automatically), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String content = params[0];
+
+            mNouns = KeywordUtil.getNounsFromText(content);
+
+            for(String noun : mNouns) {
+                NaverRestClient<KeywordService> client = new NaverRestClient<>();
+                KeywordService service = client.getClient(KeywordService.class);
+
+                Call<ResponseFromNaver> call = service.getKeywordsFromNaver(noun);
+                call.enqueue(new Callback<ResponseFromNaver>() {
+                    @Override
+                    public void onResponse(Call<ResponseFromNaver> call, Response<ResponseFromNaver> response) {
+
+                        if (response.isSuccessful()) {
+                            ResponseFromNaver responseFromNaver = response.body();
+                            List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
+                            for(ResponseFromNaver.Item item : items) {
+                                List<String> nounsFromTitle = KeywordUtil.getNounsFromText(item.getTitle());
+                                for (String nounFromTitle : nounsFromTitle) {
+                                    if (!mNouns.contains(nounFromTitle)) {
+                                        mNouns.add(nounFromTitle);
+                                    }
+                                }
+                            }
+                        } else {
+                            Log.d(TAG, "호출 실패 : " + response.errorBody());
+                        }
+
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
+                        Log.d(TAG, "오류 발생");
+                        t.printStackTrace();
+                    }
+                });
+            }
+
+            return mNouns.get(mNouns.size()-1);
+        }
+
+        @Override
+        protected void onPostExecute(String keywordName) {
+            Toast.makeText(mContext,
+                    getString(R.string.after_get_keyword, keywordName), Toast.LENGTH_LONG).show();
+
+            Intent intent = new Intent(getApplicationContext(), TTMainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+            onBackPressed();
+        }
+
     }
 
 }

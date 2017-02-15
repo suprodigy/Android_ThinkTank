@@ -168,8 +168,14 @@ public class KeywordManager {
         pq.offer(new Pair<>(startIdx, mCountMap.get(keywordStarted)));
 
         int cnt = 0;
-        while (cnt++ < 25 && pq.size() != 0) {
+        while (cnt < 25 && pq.size() != 0) {
             Pair<Integer, Integer> now = pq.poll();
+
+            if (now.second == 0) {
+                continue;
+            }
+
+            cnt++;
             ret.add(new Pair<>(mIndexMap.get(now.first), now.second));
 
             ArrayList<Boolean> path = isConnected.get(now.first);
@@ -208,7 +214,7 @@ public class KeywordManager {
             }
         }
 
-        return new Pair<Integer, Integer>(min, max);
+        return new Pair<>(min, max);
     }
 
 }

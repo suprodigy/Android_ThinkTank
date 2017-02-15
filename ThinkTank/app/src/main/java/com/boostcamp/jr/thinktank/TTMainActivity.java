@@ -69,9 +69,13 @@ public class TTMainActivity extends MyActivity {
 
         TestUtil.checkKeyword();
 
-        // layout_show_keyword Item set
+        initLayoutShowKeyword();
+    }
+
+    private void initLayoutShowKeyword() {
         // Default - 가장 많이 언급된 키워드를 기준으로 BFS
         String startKeyword = KeywordObserver.get().getKeywordNameThatHasMaxCount();
+
         if (startKeyword != null) {
             setLayoutShowKeyword(startKeyword);
         }
@@ -99,6 +103,12 @@ public class TTMainActivity extends MyActivity {
 
         new ForEffectTask().execute(startKeyword);
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initLayoutShowKeyword();
     }
 
     @Override
