@@ -375,7 +375,7 @@ public class TTDetailActivity extends MyActivity {
     /**
      * 멤버 변수인 mKeywordStrings가 keyword로 추가된 String을 유지하고 있고,
      * "#" 추가 후 textView에 set!
-     * (키워드가 없으면 안내 문자열로 set!) - R.string.no_keyword
+     * (키워드가 없으면 안내 문자열로 set! - R.string.no_keyword)
      */
 
     private void setKeywordTextView() {

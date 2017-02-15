@@ -8,7 +8,7 @@
     <string name="search_content_description">키워드 검색</string>
 
     <!-- TTListActivity -->
-    <string name="korean_lorem_ipsum">이 헌법은 1988년 2월 25일부터 시행한다. 다만, 이 헌법을 시행하기 위하여 필요한 법률의 제정·개정과 이 헌법에 의한 대통령 및 국회의원의 선거 기타 이 헌법시행에 관한 준비는 이 헌법시행 전에 할 수 있다.</string>
+    <string name="korean_lorem_ipsum">모든 지식의 연장은 의식적인 행동을 무의식으로 바꾸는 것에서 생겨난다.\n알겠지만, 상상력에는 시간 허비가 필요하다. 길고, 비효율적이며 즐거운 게으름, 꾸물거림, 어정거림.</string>
     <string name="action_search">검색</string>
 
     <!-- TTDetailActivity -->
