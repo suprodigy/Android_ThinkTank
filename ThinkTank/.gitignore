@@ -1,5 +1,8 @@
 .gradle
 .DS_Store
+gradlew
+gradlew.bat
+gradle.properties
 
 # built application files
 *.apk
@@ -41,8 +44,3 @@ project.properties
 ##Gradle-based build
 .gradle
 build/
-
-gradlew
-gradlew.bat
-
-gradle.properties
