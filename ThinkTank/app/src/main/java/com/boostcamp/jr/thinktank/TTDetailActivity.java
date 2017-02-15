@@ -40,14 +40,11 @@ import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// DONE (1) 키워드 Delete bug 수정(업데이트 시 Count 계속 다운 가능), DeleteDialog 수정
-// DONE (2) ThinkItem Field(Date) 추가
-// DONE (3) UPDATE 버그 수정
-// TODO (5) 키워드 추출 기능 추가 (Retrofit 이용)
-// TODO (6) Content 꾸미기 기능 추가 (Spannable)
-// TODO (7) 사진 추가 기능 추가
-// TODO (8) keyword 추가/삭제 UX 수정 - Click/LongClick(?)
-
+// TODO (1) 키워드 추출 기능 추가 (Retrofit 이용)
+// TODO (2) 사진 추가, 공유 기능 추가
+// TODO (3) 검색 기능 추가
+// TODO (5) Content 꾸미기 기능 추가 (Spannable)
+// TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick(?)
 
 /**
  *
@@ -315,11 +312,14 @@ public class TTDetailActivity extends MyActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Log.d(TAG, "onTextChanged()................");
                 mThinkItem.setContent(s.toString());
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+                // Log.d(TAG, "afterTextChanged()..............");
+            }
         });
 
     }

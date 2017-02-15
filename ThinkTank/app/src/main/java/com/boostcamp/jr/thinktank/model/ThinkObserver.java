@@ -17,8 +17,6 @@ public class ThinkObserver {
 
     private static ThinkObserver sThinkObserver;
 
-    private Realm mRealm;
-
     public static ThinkObserver get() {
         if (sThinkObserver == null) {
             sThinkObserver = new ThinkObserver();
@@ -29,9 +27,9 @@ public class ThinkObserver {
     private ThinkObserver() {}
 
     public void insert(final ThinkItem item) {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        mRealm.executeTransaction(new Realm.Transaction() {
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.createObject(ThinkItem.class, item.getId())
@@ -42,13 +40,12 @@ public class ThinkObserver {
 
         KeywordManager.get().updateKeywordRelation(item);
 
-        mRealm.close();
     }
 
     public void update(final ThinkItem item) {
-        mRealm.close();
+        Realm realm = Realm.getDefaultInstance();
 
-        mRealm.executeTransaction(new Realm.Transaction() {
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.copyToRealmOrUpdate(item);
@@ -57,13 +54,12 @@ public class ThinkObserver {
 
         KeywordManager.get().updateKeywordRelation(item);
 
-        mRealm.close();
     }
 
     public void delete(ThinkItem item) {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        final ThinkItem ItemToDelete = mRealm.where(ThinkItem.class)
+        final ThinkItem ItemToDelete = realm.where(ThinkItem.class)
                 .equalTo("id", item.getId()).findFirst();
 
         KeywordObserver observer = KeywordObserver.get();
@@ -74,33 +70,25 @@ public class ThinkObserver {
             observer.update(temp);
         }
 
-        mRealm.executeTransaction(new Realm.Transaction() {
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 ItemToDelete.deleteFromRealm();
             }
         });
 
-        mRealm.close();
     }
 
     public OrderedRealmCollection<ThinkItem> selectAll() {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        OrderedRealmCollection<ThinkItem> ret =
-                mRealm.where(ThinkItem.class).findAllSorted("dateUpdated", Sort.DESCENDING);
-
-        mRealm.close();
-        return ret;
+        return realm.where(ThinkItem.class).findAllSorted("dateUpdated", Sort.DESCENDING);
     }
 
     public ThinkItem getCopiedObject(ThinkItem src) {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        ThinkItem ret = mRealm.copyFromRealm(src);
-
-        mRealm.close();
-        return ret;
+        return realm.copyFromRealm(src);
     }
 
 }

@@ -3,6 +3,15 @@ package com.boostcamp.jr.thinktank.utils;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import com.twitter.penguin.korean.TwitterKoreanProcessorJava;
+import com.twitter.penguin.korean.phrase_extractor.KoreanPhraseExtractor;
+import com.twitter.penguin.korean.tokenizer.KoreanTokenizer;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import scala.collection.Seq;
+
 /**
  * Created by jr on 2017-02-12.
  */
@@ -23,6 +32,14 @@ public class KeywordUtil {
         }
     }
 
+    /**
+     * 달팽이 모양 순서대로 배열을 순회하면서, (접근순서, 5 * row + col)을 (key, value)로 맵에 저장
+     * 배열을 왼쪽에서 오른쪽으로, 위에서 아래로 순회하면서 해당 요소에 값을 붙인다면 5 * row + col이 됨.
+     *
+     * @param cnt 접근 순서
+     * @return 이에 해당하는 row와 col 값 반환
+     */
+    //
     public static int getOrderFromCount(int cnt) {
 
         if (orderMap.size() == 0) {
@@ -80,4 +97,33 @@ public class KeywordUtil {
 
     }
 
+    /**
+     * twitter-korean-text library를 이용하여, Text에서 명사들만 뽑아냄
+     * 물론 명사만 키워드가 될 있는 건 아니지만, 현재는 명사들만 추출해서 Keyword 찾는데 이용
+     */
+    public static List<String> getNounsFromText(String text) {
+
+        // text에서 오탈자를 수정
+        // ex) 이닼ㅋㅋㅋ -> 이다ㅋㅋㅋ
+        CharSequence nomalized = TwitterKoreanProcessorJava.normalize(text);
+
+        // nomalized된 text를 토큰화 (품사별로 분리)
+        Seq<KoreanTokenizer.KoreanToken> tokens = TwitterKoreanProcessorJava.tokenize(nomalized);
+
+        // 토근화된 단어를 List 형대로 가지고 있는 tokens에서 명사만 추출
+        List<KoreanPhraseExtractor.KoreanPhrase> phrases =
+                TwitterKoreanProcessorJava.extractPhrases(tokens, true, true);
+
+        // 명사로 된 단어들만 리스트에 담아서 리턴
+        List<String> ret = new ArrayList<>();
+        for (KoreanPhraseExtractor.KoreanPhrase phrase : phrases) {
+            String noun = phrase.text();
+            if (noun.charAt(0) == '#') {
+                noun = KeywordUtil.removeTag(noun);
+            }
+            ret.add(noun);
+        }
+
+        return ret;
+    }
 }

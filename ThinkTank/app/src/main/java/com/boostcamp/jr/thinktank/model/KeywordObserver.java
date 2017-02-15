@@ -14,8 +14,6 @@ public class KeywordObserver {
 
     private static KeywordObserver sKeywordObserver;
 
-    private Realm mRealm;
-
     public static KeywordObserver get() {
         if (sKeywordObserver == null) {
             sKeywordObserver = new KeywordObserver();
@@ -27,7 +25,9 @@ public class KeywordObserver {
 
     // auto_increment 적용된 id값 자동 반환
     public int getKeyId() {
-        Number currentMaxId = mRealm.where(KeywordItem.class).max("id");
+        Realm realm = Realm.getDefaultInstance();
+
+        Number currentMaxId = realm.where(KeywordItem.class).max("id");
 
         int nextId;
         if(currentMaxId == null) {
@@ -40,9 +40,9 @@ public class KeywordObserver {
     }
 
     public void insert(final KeywordItem item) {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        mRealm.executeTransaction(new Realm.Transaction() {
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.createObject(KeywordItem.class, item.getId())
@@ -52,53 +52,44 @@ public class KeywordObserver {
             }
         });
 
-        mRealm.close();
     }
 
     public void update(final KeywordItem item) {
-        mRealm = Realm.getDefaultInstance();
-        mRealm.executeTransaction(new Realm.Transaction() {
+        Realm realm = Realm.getDefaultInstance();
+        realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 realm.copyToRealmOrUpdate(item);
             }
         });
-        mRealm.close();
     }
 
     public KeywordItem getKeywordByName(String name) {
-        mRealm = Realm.getDefaultInstance();
-        KeywordItem ret = mRealm.where(KeywordItem.class).equalTo("name", name).findFirst();
-        mRealm.close();
-        return ret;
+        Realm realm = Realm.getDefaultInstance();
+
+        return realm.where(KeywordItem.class).equalTo("name", name).findFirst();
     }
 
     public OrderedRealmCollection<KeywordItem> selectAll() {
-        mRealm = Realm.getDefaultInstance();
-        OrderedRealmCollection<KeywordItem> ret = mRealm.where(KeywordItem.class).findAllSorted("id");
-        mRealm.close();
-        return ret;
+        Realm realm = Realm.getDefaultInstance();
+        return realm.where(KeywordItem.class).findAllSorted("id");
     }
 
     public KeywordItem getCopiedObject(KeywordItem src) {
-        mRealm = Realm.getDefaultInstance();
-        KeywordItem ret = mRealm.copyFromRealm(src);
-        mRealm.close();
-        return ret;
+        Realm realm = Realm.getDefaultInstance();
+        return realm.copyFromRealm(src);
     }
 
     // 가장 많이 언급된 KeywordItem의 이름을 반환
     public String getKeywordNameThatHasMaxCount() {
-        mRealm = Realm.getDefaultInstance();
+        Realm realm = Realm.getDefaultInstance();
 
-        if (mRealm.where(KeywordItem.class).findAll().size() != 0) {
+        if (realm.where(KeywordItem.class).findAll().size() != 0) {
             KeywordItem keywordItem =
-                    mRealm.where(KeywordItem.class).findAllSorted("count", Sort.DESCENDING).first();
+                    realm.where(KeywordItem.class).findAllSorted("count", Sort.DESCENDING).first();
 
-            mRealm.close();
             return keywordItem.getName();
         } else {
-            mRealm.close();
             return null;
         }
 

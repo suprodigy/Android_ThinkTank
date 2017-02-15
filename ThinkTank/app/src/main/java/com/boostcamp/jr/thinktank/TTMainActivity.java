@@ -1,18 +1,15 @@
 package com.boostcamp.jr.thinktank;
 
-import android.app.ActionBar;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.GridLayoutManager.LayoutParams;
+import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Pair;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.GridLayout;
 import android.widget.TextView;
 
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
@@ -28,7 +25,8 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// TODO (4) Keyword 관계도 구현 (KeywordManager.java) - TestData로 테스트
+// DONE (4) AsyncTask cancel 시키기
+// TODO (4) textView animation 적용
 
 public class TTMainActivity extends MyActivity {
 
@@ -84,7 +82,11 @@ public class TTMainActivity extends MyActivity {
         for (int i=0; i<5; i++) {
             for (int j = 0; j < 5; j++) {
                 TextView textView = new TextView(this);
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams(
+                        GridLayout.spec(GridLayout.UNDEFINED, 1f), GridLayout.spec(GridLayout.UNDEFINED, 1f));
+                textView.setLayoutParams(params);
                 textView.setTextColor(getResources().getColor(R.color.blue));
+                textView.setGravity(Gravity.CENTER);
                 CalligraphyUtils.applyFontToTextView(this, textView, "fonts/NanumPen.ttf");
                 mLayoutShowKeyword.addView(textView);
                 mTextViews.add(textView);
@@ -95,24 +97,7 @@ public class TTMainActivity extends MyActivity {
 
     private void setLayoutShowKeyword(String startKeyword) {
 
-        List<Pair<String, Integer>> keywordList = KeywordManager.get().getKeywordByBFS(startKeyword);
-
-        Pair<Integer, Integer> minMaxCount = KeywordManager.get().getMinMaxCount(keywordList);
-
-        for (int i=0; i<keywordList.size(); i++) {
-            TextView textView = mTextViews.get(KeywordUtil.getOrderFromCount(i));
-            textView.setText("#" + keywordList.get(i).first);
-            float textSize = KeywordUtil.getTextSize(keywordList.get(i).second, minMaxCount);
-            textView.setTextSize(textSize);
-            textView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    TextView textView = (TextView) v;
-                    String keywordName = KeywordUtil.removeTag(textView.getText().toString());
-                    setLayoutShowKeyword(keywordName);
-                }
-            });
-        }
+        new ForEffectTask().execute(startKeyword);
 
     }
 
@@ -155,9 +140,9 @@ public class TTMainActivity extends MyActivity {
         // 생성된 테스트 데이터로 layout set
         @Override
         protected void onPostExecute(Void aVoid) {
+            showResult();
             String startKeyword = KeywordObserver.get().getKeywordNameThatHasMaxCount();
             setLayoutShowKeyword(startKeyword);
-            showResult();
         }
 
         private void showProgressBar() {
@@ -168,6 +153,67 @@ public class TTMainActivity extends MyActivity {
         private void showResult() {
             mLayoutProgressBar.setVisibility(View.INVISIBLE);
             mLayoutShowKeyword.setVisibility(View.VISIBLE);
+        }
+
+    }
+
+    private class ForEffectTask extends AsyncTask<String, Integer, Void> {
+
+        List<Pair<String, Integer>> mKeywordList;
+        Pair<Integer, Integer> mMinMaxCount;
+        Boolean mIsCancelled = false;
+
+        @Override
+        protected void onPreExecute() {
+            for(TextView textView : mTextViews) {
+                textView.setText("");
+            }
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            String startKeyword = params[0];
+
+            mKeywordList = KeywordManager.get().getKeywordByBFS(startKeyword);
+            mMinMaxCount = KeywordManager.get().getMinMaxCount(mKeywordList);
+
+            try {
+                for (int i = 0; i < mKeywordList.size(); i++) {
+                    if(mIsCancelled) {
+                        break;
+                    }
+
+                    // Log.d("AsyncTask", i + "번째 publish!!!!");
+                    publishProgress(i);
+                    Thread.sleep(300);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            if (!mIsCancelled) {
+                int i = values[0];
+                TextView textView = mTextViews.get(KeywordUtil.getOrderFromCount(i));
+                textView.setText("#" + mKeywordList.get(i).first);
+                float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
+                textView.setTextSize(textSize);
+                textView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        TextView textView = (TextView) v;
+                        String keywordName = KeywordUtil.removeTag(textView.getText().toString());
+                        mIsCancelled = true;
+                        setLayoutShowKeyword(keywordName);
+                    }
+                });
+            }
         }
 
     }
