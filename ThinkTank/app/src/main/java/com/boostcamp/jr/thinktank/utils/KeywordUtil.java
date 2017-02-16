@@ -1,22 +1,20 @@
 package com.boostcamp.jr.thinktank.utils;
 
+import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
 
-import com.twitter.penguin.korean.TwitterKoreanProcessorJava;
-import com.twitter.penguin.korean.phrase_extractor.KoreanPhraseExtractor;
-import com.twitter.penguin.korean.tokenizer.KoreanTokenizer;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import scala.collection.Seq;
+import org.snu.ids.ha.index.Keyword;
+import org.snu.ids.ha.index.KeywordExtractor;
+import org.snu.ids.ha.index.KeywordList;
 
 /**
  * Created by jr on 2017-02-12.
  */
 
 public class KeywordUtil {
+
+    public static final String TAG = "KeywordUtil";
 
     public static SparseArray<Integer> orderMap = new SparseArray<>();
 
@@ -77,7 +75,7 @@ public class KeywordUtil {
      * @param minMaxCount: BFS의 결과로 나온 keyword의 List에서 count 최소값과 최대값
      * @return min, max에 대해 count의 상대적인 크기를 구함
      *
-     * textSize는 12sp~40sp 사이의 값으로 제한
+     * textSize는 15sp~30sp 사이의 값으로 제한
      *
      */
     public static float getTextSize(int count, Pair<Integer, Integer> minMaxCount) {
@@ -85,12 +83,12 @@ public class KeywordUtil {
         int min = minMaxCount.first, max = minMaxCount.second;
 
         if (min == max) {
-            return (40 + 12) / 2;
+            return (30 + 15) / 2;
         } else {
 
             // y = ax + b (y: textSize, x: keyword.getCount())
-            float a = 28 / (max - min);
-            float b = 12 - a * min;
+            float a = 15 / (max - min);
+            float b = 15 - a * min;
 
             return a * count + b;
         }
@@ -100,30 +98,78 @@ public class KeywordUtil {
     /**
      * twitter-korean-text library를 이용하여, Text에서 명사들만 뽑아냄
      * 물론 명사만 키워드가 될 있는 건 아니지만, 현재는 명사들만 추출해서 Keyword 찾는데 이용
+     * Android에서 사용 불가 -> 다른 것으로 수정
      */
-    public static List<String> getNounsFromText(String text) {
+//    public static List<String> getNounsFromText(String text) {
+//
+//        // text에서 오탈자를 수정
+//        // ex) 이닼ㅋㅋㅋ -> 이다ㅋㅋㅋ
+//        CharSequence nomalized = TwitterKoreanProcessorJava.normalize(text);
+//
+//        Log.d(TAG, text.equals("메모를 입력하세요") ? "true" : "false");
+//        Log.d(TAG, nomalized.toString());
+//        Log.d(TAG, "size : " + nomalized.length());
+//
+//        // nomalized된 text를 토큰화 (품사별로 분리)
+//        Seq<KoreanTokenizer.KoreanToken> tokens = TwitterKoreanProcessorJava.tokenize(nomalized);
+//
+//        Log.d(TAG, tokens.toString());
+//
+//        // 토근화된 단어를 List 형대로 가지고 있는 tokens에서 명사만 추출
+//        List<KoreanPhraseExtractor.KoreanPhrase> phrases =
+//                TwitterKoreanProcessorJava.extractPhrases(tokens, true, true);
+//
+//        Log.d(TAG, phrases.toString());
+//
+//        // 명사로 된 단어들만 리스트에 담아서 리턴
+//        List<String> ret = new ArrayList<>();
+//        for (KoreanPhraseExtractor.KoreanPhrase phrase : phrases) {
+//            String noun = phrase.text();
+//            if (noun.charAt(0) == '#') {
+//                noun = KeywordUtil.removeTag(noun);
+//            }
+//            ret.add(noun);
+//        }
+//
+//        return ret;
+//    }
 
-        // text에서 오탈자를 수정
-        // ex) 이닼ㅋㅋㅋ -> 이다ㅋㅋㅋ
-        CharSequence nomalized = TwitterKoreanProcessorJava.normalize(text);
+    public static String getKeywordFromContent(String content) {
 
-        // nomalized된 text를 토큰화 (품사별로 분리)
-        Seq<KoreanTokenizer.KoreanToken> tokens = TwitterKoreanProcessorJava.tokenize(nomalized);
+        Log.d(TAG, "1.............................");
+        Log.d(TAG, "1.............................");
+        Log.d(TAG, "1.............................");
+        Log.d(TAG, "1.............................");
+        Log.d(TAG, "1.............................");
+        Log.d(TAG, "1.............................");
 
-        // 토근화된 단어를 List 형대로 가지고 있는 tokens에서 명사만 추출
-        List<KoreanPhraseExtractor.KoreanPhrase> phrases =
-                TwitterKoreanProcessorJava.extractPhrases(tokens, true, true);
+        // init KeywordExtractor
+        KeywordExtractor ke = new KeywordExtractor();
 
-        // 명사로 된 단어들만 리스트에 담아서 리턴
-        List<String> ret = new ArrayList<>();
-        for (KoreanPhraseExtractor.KoreanPhrase phrase : phrases) {
-            String noun = phrase.text();
-            if (noun.charAt(0) == '#') {
-                noun = KeywordUtil.removeTag(noun);
-            }
-            ret.add(noun);
+        Log.d(TAG, "1.............................");
+
+        // extract keywords
+        KeywordList kl = ke.extractKeyword(content, true);
+
+        Log.d(TAG, "2...............................");
+
+        // print result
+        for( int i = 0; i < kl.size(); i++ ) {
+            Keyword kwrd = kl.get(i);
+            Log.d(TAG, kwrd.getString() + ", " + kwrd.getCnt() + "....................");
         }
 
-        return ret;
+        Log.d(TAG, "3................................");
+
+        int cnt = 0;
+        while(kl.get(cnt).getCnt()
+                == (kl.get(cnt+1).getCnt())) {
+            cnt++;
+        }
+
+        int idx = (int)(Math.random() * cnt);
+        Log.d(TAG, "idx : " + idx + ".............................");
+        return kl.get(idx).getString();
     }
+
 }

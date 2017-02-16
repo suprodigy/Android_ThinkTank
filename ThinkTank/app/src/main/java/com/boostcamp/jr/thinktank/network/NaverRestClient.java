@@ -12,6 +12,7 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
@@ -21,7 +22,7 @@ import retrofit2.http.Query;
 public class NaverRestClient<T> {
 
     private T service;
-    private String baseUrl = "https://openapi.naver.com/v1/search/blog.json";
+    private String baseUrl = "https://openapi.naver.com/";
 
     private final String CLIENT_ID = BuildConfig.MY_CLIENT_ID;
     private final String CLIENT_SECRET = BuildConfig.MY_CLIENT_SECRET;
@@ -59,7 +60,9 @@ public class NaverRestClient<T> {
     }
 
     public interface KeywordService {
-        @GET
-        Call<ResponseFromNaver> getKeywordsFromNaver(@Query("query") String query);
+        @GET("v1/{api}/{response}")
+        Call<ResponseFromNaver> getKeywordsFromNaver(@Path("api") String kind,
+                                                     @Path("response") String response,
+                                                     @Query("query") String query);
     }
 }

@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.Menu;
@@ -25,7 +26,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// DONE (4) AsyncTask cancel 시키기
 // TODO (4) textView animation 적용
 
 public class TTMainActivity extends MyActivity {
@@ -122,6 +122,8 @@ public class TTMainActivity extends MyActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
+            return true;
+        } else if (id == R.id.generate_data) {
             new TestTask().execute();
             return true;
         }
@@ -186,11 +188,14 @@ public class TTMainActivity extends MyActivity {
             String startKeyword = params[0];
 
             mKeywordList = KeywordManager.get().getKeywordByBFS(startKeyword);
+
+            Log.d("TTMainActivity", mKeywordList.size() + ".................................");
+
             mMinMaxCount = KeywordManager.get().getMinMaxCount(mKeywordList);
 
             try {
                 for (int i = 0; i < mKeywordList.size(); i++) {
-                    if(mIsCancelled) {
+                    if(mIsCancelled || isCancelled()) {
                         break;
                     }
 

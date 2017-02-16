@@ -217,4 +217,10 @@ public class KeywordManager {
         return new Pair<>(min, max);
     }
 
+    public void updateCountMap(KeywordItem item) {
+        String keywordName = item.getName();
+
+        mCountMap.put(keywordName, mCountMap.get(keywordName) -1);
+    }
+
 }

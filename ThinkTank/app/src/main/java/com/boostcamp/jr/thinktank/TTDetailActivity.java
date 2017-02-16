@@ -2,9 +2,11 @@ package com.boostcamp.jr.thinktank;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -14,7 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,9 +25,6 @@ import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
-import com.boostcamp.jr.thinktank.network.NaverRestClient;
-import com.boostcamp.jr.thinktank.network.NaverRestClient.KeywordService;
-import com.boostcamp.jr.thinktank.network.ResponseFromNaver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.github.clans.fab.FloatingActionButton;
 
@@ -42,16 +40,13 @@ import butterknife.OnClick;
 import butterknife.OnLongClick;
 import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// TODO (1) 키워드 추출 기능 추가 (Retrofit 이용)
-// TODO (2) 사진 추가, 공유 기능 추가
+// TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
+// DONE (2) 사진 추가, 공유 기능 추가 - db 연동X
 // TODO (3) 검색 기능 추가
 // TODO (5) Content 꾸미기 기능 추가 (Spannable)
-// TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick(?)
+// TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
 /**
  *
@@ -66,6 +61,10 @@ public class TTDetailActivity extends MyActivity {
     // TTListActivity가 newIntent 메소드를 통해 TTDetailActivity를 부르는 Intent를 얻음
     // EXTRA_POSITION은 Intent Extra의 Key 값
     public static final String EXTRA_POSITION = "com.boostcamp.jr.thinktank.position";
+
+
+    private static final int REQUEST_PHOTO = 0;
+    private static final int REQUEST_LOAD_IMAGE = 1;
 
     public static Intent newIntent(Context packageContext, int position) {
         Intent intent = new Intent(packageContext, TTDetailActivity.class);
@@ -93,11 +92,17 @@ public class TTDetailActivity extends MyActivity {
     @BindView(R.id.activity_tt_detail)
     View mLayout;
 
+    @BindView(R.id.layout_for_image)
+    LinearLayout mLayoutForImage;
+
     @BindView(R.id.think_keyword)
     TextView mKeywordTextView;
 
     @BindView(R.id.think_content)
     EditText mContentEditText;
+
+    @BindView(R.id.take_photo_button)
+    FloatingActionButton mTakePhotoButton;
 
     @BindView(R.id.share_button)
     FloatingActionButton mShareButton;
@@ -105,11 +110,9 @@ public class TTDetailActivity extends MyActivity {
     @BindView(R.id.delete_button)
     FloatingActionButton mDeleteButton;
 
-    @BindView(R.id.add_tag_button)
-    ImageButton mAddTagButton;
 
-    @OnClick(R.id.add_tag_button)
-    void onAddTagButtonClicked() {
+    @OnClick(R.id.think_keyword)
+    void onKeywordViewClicked() {
         if (mKeywordStrings.size() == 3) {
             Toast.makeText(this, R.string.cannot_add_keyword, Toast.LENGTH_SHORT).show();
         } else {
@@ -150,14 +153,33 @@ public class TTDetailActivity extends MyActivity {
         mDialog.show();
     }
 
-    @OnClick(R.id.image_button)
-    void onImageButtonClicked() {
+    @OnClick(R.id.extract_keyword)
+    void onExtractButtonClicked() {
+        if (mThinkItem.getContent().length() != 0) {
+            new GetKeywordTask().execute(mThinkItem.getContent());
+        }
+    }
 
+    @OnClick(R.id.take_photo_button)
+    void onTakePhotoButtonClicked() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_PHOTO);
+    }
+
+    @OnClick(R.id.get_image_from_gallery)
+    void onImageButtonClicked() {
+        Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(i, REQUEST_LOAD_IMAGE);
     }
 
     @OnClick(R.id.share_button)
     void onShareButtonClicked() {
-
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TEXT, mThinkItem.getContent());
+        i.putExtra(Intent.EXTRA_SUBJECT, mKeywordTextView.getText().toString());
+        i = Intent.createChooser(i, getString(R.string.share_think));
+        startActivity(i);
     }
 
     @OnClick(R.id.delete_button)
@@ -277,12 +299,20 @@ public class TTDetailActivity extends MyActivity {
     private void init() {
         mDeleted = false;
         int position = getIntent().getIntExtra(EXTRA_POSITION, -1);
+        initImageButton();
 
         if (position == -1) {
             setIfItemNotAdded();
         } else {
             setIfItemAdded(position);
         }
+    }
+
+    private void initImageButton() {
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        PackageManager packageManager = getPackageManager();
+        boolean canTakePhoto = captureImage.resolveActivity(packageManager) != null;
+        mTakePhotoButton.setEnabled(canTakePhoto);
     }
 
     private void setIfItemNotAdded() {
@@ -336,12 +366,9 @@ public class TTDetailActivity extends MyActivity {
         super.onPause();
 
         String content = mThinkItem.getContent();
-        if (content == null || content.length() == 0) {
+        if (content == null || content.length() == 0
+                || mKeywordStrings.size() == 0) {
             return;
-        }
-
-        if (mKeywordStrings.size() == 0) {
-            new GetKeywordTask().execute(content);
         }
 
         RealmList<KeywordItem> keywords = new RealmList<>();
@@ -406,8 +433,6 @@ public class TTDetailActivity extends MyActivity {
 
         Context mContext;
 
-        List<String> mNouns;
-
         @Override
         protected void onPreExecute() {
             mContext = getApplicationContext();
@@ -420,54 +445,52 @@ public class TTDetailActivity extends MyActivity {
         protected String doInBackground(String... params) {
             String content = params[0];
 
-            mNouns = KeywordUtil.getNounsFromText(content);
+            Log.d(TAG, "키워드를 추출합니다...");
+            String keywordExtracted = KeywordUtil.getKeywordFromContent(content);
 
-            for(String noun : mNouns) {
-                NaverRestClient<KeywordService> client = new NaverRestClient<>();
-                KeywordService service = client.getClient(KeywordService.class);
+//            for(String noun : mNouns) {
+//                NaverRestClient<KeywordService> client = new NaverRestClient<>();
+//                KeywordService service = client.getClient(KeywordService.class);
+//
+//                Call<ResponseFromNaver> call = service.getKeywordsFromNaver("search", "blog.json", noun);
+//                call.enqueue(new Callback<ResponseFromNaver>() {
+//                    @Override
+//                    public void onResponse(Call<ResponseFromNaver> call, Response<ResponseFromNaver> response) {
+//
+//                        if (response.isSuccessful()) {
+//                            ResponseFromNaver responseFromNaver = response.body();
+//                            List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
+//                            for(ResponseFromNaver.Item item : items) {
+//                                List<String> nounsFromTitle = KeywordUtil.getNounsFromText(item.getTitle());
+//                                for (String nounFromTitle : nounsFromTitle) {
+//                                    if (!mNouns.contains(nounFromTitle)) {
+//                                        mNouns.add(nounFromTitle);
+//                                    }
+//                                }
+//                            }
+//                        } else {
+//                            Log.d(TAG, "호출 실패 : " + response.errorBody());
+//                        }
+//
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
+//                        Log.d(TAG, "오류 발생");
+//                        t.printStackTrace();
+//                    }
+//                });
+//            }
 
-                Call<ResponseFromNaver> call = service.getKeywordsFromNaver(noun);
-                call.enqueue(new Callback<ResponseFromNaver>() {
-                    @Override
-                    public void onResponse(Call<ResponseFromNaver> call, Response<ResponseFromNaver> response) {
-
-                        if (response.isSuccessful()) {
-                            ResponseFromNaver responseFromNaver = response.body();
-                            List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
-                            for(ResponseFromNaver.Item item : items) {
-                                List<String> nounsFromTitle = KeywordUtil.getNounsFromText(item.getTitle());
-                                for (String nounFromTitle : nounsFromTitle) {
-                                    if (!mNouns.contains(nounFromTitle)) {
-                                        mNouns.add(nounFromTitle);
-                                    }
-                                }
-                            }
-                        } else {
-                            Log.d(TAG, "호출 실패 : " + response.errorBody());
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
-                        Log.d(TAG, "오류 발생");
-                        t.printStackTrace();
-                    }
-                });
-            }
-
-            return mNouns.get(mNouns.size()-1);
+            Log.d(TAG, "keywordExtracted : " + keywordExtracted);
+            return keywordExtracted;
         }
 
         @Override
         protected void onPostExecute(String keywordName) {
             Toast.makeText(mContext,
                     getString(R.string.after_get_keyword, keywordName), Toast.LENGTH_LONG).show();
-
-            Intent intent = new Intent(getApplicationContext(), TTMainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivity(intent);
-            onBackPressed();
+            getKeywordFromDialog(keywordName);
         }
 
     }

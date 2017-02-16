@@ -67,6 +67,7 @@ public class ThinkObserver {
         for(KeywordItem keyword : list) {
             KeywordItem temp = observer.getCopiedObject(keyword);
             temp.setCount(temp.getCount()-1);
+            KeywordManager.get().updateCountMap(temp);
             observer.update(temp);
         }
 

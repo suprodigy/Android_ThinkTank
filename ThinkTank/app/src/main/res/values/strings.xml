@@ -8,6 +8,7 @@
     <string name="search_content_description">키워드 검색</string>
     <string name="explain_get_keyword_automatically">키워드를 자동 추출합니다.</string>
     <string name="after_get_keyword">추출된 키워드는 %1$s!</string>
+    <string name="generate_data">테스트 데이터 생성</string>
 
     <!-- TTListActivity -->
     <string name="korean_lorem_ipsum">모든 지식의 연장은 의식적인 행동을 무의식으로 바꾸는 것에서 생겨난다.\n알겠지만, 상상력에는 시간 허비가 필요하다. 길고, 비효율적이며 즐거운 게으름, 꾸물거림, 어정거림.</string>
@@ -15,11 +16,14 @@
 
     <!-- TTDetailActivity -->
     <string name="content_hint">메모를 입력하세요.</string>
-    <string name="image_menu">사진 추가</string>
+    <string name="extract_keyword">키워드 추출</string>
+    <string name="take_photo">사진 찍기</string>
+    <string name="get_image_from_gallery">갤러리에서 가져오기</string>
     <string name="share_menu">메모 공유</string>
     <string name="delete_menu">메모 삭제</string>
     <string name="no_keyword">키워드가 없습니다.</string>
     <string name="tag_add_content_description">태그 추가</string>
+    <string name="share_think">메모 전송</string>
 
     <!-- AddKeywordDialog -->
     <string name="cannot_add_keyword">최대 3개까지 입력 가능합니다.</string>

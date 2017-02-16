@@ -10,4 +10,10 @@
         android:icon="@drawable/ic_app_settting"
         app:showAsAction="ifRoom"/>
 
+    <item
+        android:id="@+id/generate_data"
+        android:orderInCategory="101"
+        android:title="@string/generate_data"
+        app:showAsAction="never"/>
+
 </menu>
