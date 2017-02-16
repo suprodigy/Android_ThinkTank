@@ -5,13 +5,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
@@ -38,6 +39,8 @@ public class TTMainActivity extends MyActivity {
     GridLayout mLayoutShowKeyword;
     @BindView(R.id.layout_progress_bar)
     View mLayoutProgressBar;
+    @BindView(R.id.keyword_input)
+    EditText mKeywordInputEditText;
 
     List<TextView> mTextViews = new ArrayList<>();
 
@@ -49,8 +52,14 @@ public class TTMainActivity extends MyActivity {
 
     @OnClick(R.id.keyword_search_button)
     public void onSearchButtonClicked() {
-        Intent intent = new Intent(this, TTListActivity.class);
-        startActivity(intent);
+
+        if (mKeywordInputEditText.getText().length() == 0) {
+            Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+        } else {
+            String keyword = mKeywordInputEditText.getText().toString();
+            Intent intent = TTListActivity.newIntent(getApplicationContext(), keyword);
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -189,7 +198,7 @@ public class TTMainActivity extends MyActivity {
 
             mKeywordList = KeywordManager.get().getKeywordByBFS(startKeyword);
 
-            Log.d("TTMainActivity", mKeywordList.size() + ".................................");
+//            Log.d("TTMainActivity", mKeywordList.size() + ".................................");
 
             mMinMaxCount = KeywordManager.get().getMinMaxCount(mKeywordList);
 

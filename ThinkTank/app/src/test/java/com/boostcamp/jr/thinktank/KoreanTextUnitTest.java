@@ -28,7 +28,6 @@ public class KoreanTextUnitTest {
             Keyword kwrd = kl.get(i);
             System.out.println(kwrd.getString() + "\t" + kwrd.getCnt());
         }
-
     }
 
 }

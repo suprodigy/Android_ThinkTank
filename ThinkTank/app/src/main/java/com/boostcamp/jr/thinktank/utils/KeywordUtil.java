@@ -156,7 +156,6 @@ public class KeywordUtil {
         // print result
         for( int i = 0; i < kl.size(); i++ ) {
             Keyword kwrd = kl.get(i);
-            Log.d(TAG, kwrd.getString() + ", " + kwrd.getCnt() + "....................");
         }
 
         Log.d(TAG, "3................................");

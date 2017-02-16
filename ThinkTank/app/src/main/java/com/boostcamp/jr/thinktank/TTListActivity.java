@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordItem;
-import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
 
@@ -31,6 +30,8 @@ import io.realm.RealmRecyclerViewAdapter;
 
 public class TTListActivity extends MyActivity {
 
+    private static final String EXTRA_KEYWORD = "keyword";
+
     private TTAdapter mAdapter;
 
     @BindView(R.id.think_list_recycler_view)
@@ -39,13 +40,29 @@ public class TTListActivity extends MyActivity {
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
+    @BindView(R.id.input_keyword_textview)
+    TextView mInputKeywordTextView;
+
+    @BindView(R.id.input_keyword_edittext)
+    TextView mInputKeywordEditText;
+
+    private boolean mInputKeywordEditTextIsVisible;
+
+    public static Intent newIntent(Context packageContext, String keyword) {
+        Intent intent = new Intent(packageContext, TTListActivity.class);
+        intent.putExtra(EXTRA_KEYWORD, keyword);
+        return intent;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tt_list);
         ButterKnife.bind(this);
 
-        setRecyclerView();
+        String keyword = getIntent().getStringExtra(EXTRA_KEYWORD);
+        setRecyclerView(keyword);
+        setToolbar(keyword);
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -53,17 +70,23 @@ public class TTListActivity extends MyActivity {
 
         setSwipeEvent();
 
-        /* for text */
-        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
-        Log.d("TTListActivity", "onCreate() : " + list.size());
-        for(KeywordItem item : list) {
-            Log.d("TTListActivity", item.getName() + ", " + item.getCount());
-        }
+//        /* for text */
+//        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
+//        Log.d("TTListActivity", "onCreate() : " + list.size());
+//        for(KeywordItem item : list) {
+//            Log.d("TTListActivity", item.getName() + ", " + item.getCount());
+//        }
     }
 
-    private void setRecyclerView() {
+    private void setToolbar(String keyword) {
+        mInputKeywordEditTextIsVisible = false;
+        mInputKeywordTextView.setText("#" + keyword);
+        mInputKeywordEditText.setText("#" + keyword);
+    }
+
+    private void setRecyclerView(String keyword) {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new TTAdapter(this, ThinkObserver.get().selectAll());
+        mAdapter = new TTAdapter(this, ThinkObserver.get().selectThatHasKeyword(keyword));
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.requestFocus();
@@ -132,7 +155,7 @@ public class TTListActivity extends MyActivity {
 
         @Override
         public void onClick(View v) {
-            Intent intent = TTDetailActivity.newIntent(getApplicationContext(), getAdapterPosition());
+            Intent intent = TTDetailActivity.newIntent(getApplicationContext(), mThinkItem.getId());
             startActivity(intent);
         }
     }
@@ -171,11 +194,32 @@ public class TTListActivity extends MyActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_search) {
-            // 검색 기능
+            if (!mInputKeywordEditTextIsVisible) {
+                showInputKeywordEditText();
+            } else if (mInputKeywordEditText.getText().length() != 0) {
+                Log.d("TTListActivity", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                String keyword = mInputKeywordEditText.getText().toString();
+                showInputKeywordTextView(keyword);
+
+            }
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showInputKeywordEditText() {
+        mInputKeywordTextView.setVisibility(View.INVISIBLE);
+        mInputKeywordEditText.setVisibility(View.VISIBLE);
+        mInputKeywordEditTextIsVisible = true;
+    }
+
+    private void showInputKeywordTextView(String keyword) {
+        mInputKeywordTextView.setText(keyword);
+        mAdapter.updateData(ThinkObserver.get().selectThatHasKeyword(keyword));
+        mInputKeywordTextView.setVisibility(View.VISIBLE);
+        mInputKeywordEditText.setVisibility(View.INVISIBLE);
+        mInputKeywordEditTextIsVisible = false;
     }
 
 }

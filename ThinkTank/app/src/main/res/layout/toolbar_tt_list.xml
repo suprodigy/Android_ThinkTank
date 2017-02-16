@@ -2,17 +2,36 @@
 <android.support.v7.widget.Toolbar
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingPrefix"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?attr/actionBarSize"
     android:background="?attr/colorPrimary">
 
-    <EditText
-        tools:text="#헌법"
-        android:textColor="@color/white"
-        android:textSize="30sp"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+        <TextView
+            tools:text="@string/no_keyword"
+            android:layout_gravity="center_vertical"
+            android:id="@+id/input_keyword_textview"
+            android:textSize="33sp"
+            android:textColor="@color/white"
+            fontPath="fonts/NanumPen.ttf"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/input_keyword_edittext"
+            android:visibility="invisible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="30sp"
+            tools:text="#헌법"/>
+
+    </FrameLayout>
 
 </android.support.v7.widget.Toolbar>

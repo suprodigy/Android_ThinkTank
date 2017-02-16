@@ -92,4 +92,17 @@ public class ThinkObserver {
         return realm.copyFromRealm(src);
     }
 
+    public OrderedRealmCollection<ThinkItem> selectThatHasKeyword(String keyword) {
+        Realm realm = Realm.getDefaultInstance();
+
+        return realm.where(ThinkItem.class).equalTo("keywords.name", keyword)
+                .findAllSorted("dateUpdated", Sort.DESCENDING);
+    }
+
+    public ThinkItem selectItemThatHasId(String id) {
+        Realm realm = Realm.getDefaultInstance();
+
+        return realm.where(ThinkItem.class).equalTo("id", id).findFirst();
+    }
+
 }

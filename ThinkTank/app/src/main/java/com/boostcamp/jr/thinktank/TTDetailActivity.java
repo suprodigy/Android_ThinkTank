@@ -60,15 +60,15 @@ public class TTDetailActivity extends MyActivity {
 
     // TTListActivity가 newIntent 메소드를 통해 TTDetailActivity를 부르는 Intent를 얻음
     // EXTRA_POSITION은 Intent Extra의 Key 값
-    public static final String EXTRA_POSITION = "com.boostcamp.jr.thinktank.position";
+    public static final String EXTRA_ID = "com.boostcamp.jr.thinktank.id";
 
 
     private static final int REQUEST_PHOTO = 0;
     private static final int REQUEST_LOAD_IMAGE = 1;
 
-    public static Intent newIntent(Context packageContext, int position) {
+    public static Intent newIntent(Context packageContext, String id) {
         Intent intent = new Intent(packageContext, TTDetailActivity.class);
-        intent.putExtra(EXTRA_POSITION, position);
+        intent.putExtra(EXTRA_ID, id);
         return intent;
     }
 
@@ -155,9 +155,9 @@ public class TTDetailActivity extends MyActivity {
 
     @OnClick(R.id.extract_keyword)
     void onExtractButtonClicked() {
-        if (mThinkItem.getContent().length() != 0) {
-            new GetKeywordTask().execute(mThinkItem.getContent());
-        }
+//        if (mThinkItem.getContent().length() != 0) {
+//            new GetKeywordTask().execute("TEst");
+//        }
     }
 
     @OnClick(R.id.take_photo_button)
@@ -298,13 +298,14 @@ public class TTDetailActivity extends MyActivity {
 
     private void init() {
         mDeleted = false;
-        int position = getIntent().getIntExtra(EXTRA_POSITION, -1);
+        String id = getIntent().getStringExtra(EXTRA_ID);
+
         initImageButton();
 
-        if (position == -1) {
+        if (id == null) {
             setIfItemNotAdded();
         } else {
-            setIfItemAdded(position);
+            setIfItemAdded(id);
         }
     }
 
@@ -322,10 +323,10 @@ public class TTDetailActivity extends MyActivity {
         mDeleteButton.setEnabled(false);
     }
 
-    private void setIfItemAdded(int position) {
+    private void setIfItemAdded(String id) {
         mIsAdded = true;
         ThinkObserver observer = ThinkObserver.get();
-        ThinkItem passedItem = observer.selectAll().get(position);
+        ThinkItem passedItem = observer.selectItemThatHasId(id);
         mThinkItem = observer.getCopiedObject(passedItem);
         setView();
     }
@@ -443,9 +444,11 @@ public class TTDetailActivity extends MyActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            String content = params[0];
+//            String content = params[0];
 
             Log.d(TAG, "키워드를 추출합니다...");
+            String content = "단어";
+
             String keywordExtracted = KeywordUtil.getKeywordFromContent(content);
 
 //            for(String noun : mNouns) {
