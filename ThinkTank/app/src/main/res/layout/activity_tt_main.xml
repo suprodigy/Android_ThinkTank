@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingPrefix"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TTMainActivity">
@@ -29,9 +30,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <EditText
+            <!--<EditText
                 android:id="@+id/keyword_input"
                 android:hint="@string/keyword_input_hint"
+                android:textSize="24sp"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"/>-->
+
+            <android.support.v7.widget.AppCompatAutoCompleteTextView
+                android:hint="@string/keyword_input_hint"
+                android:id="@+id/keyword_input"
+                android:completionThreshold="1"
                 android:textSize="24sp"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"/>

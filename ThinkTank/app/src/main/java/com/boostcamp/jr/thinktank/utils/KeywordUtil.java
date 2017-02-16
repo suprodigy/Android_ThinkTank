@@ -1,12 +1,14 @@
 package com.boostcamp.jr.thinktank.utils;
 
-import android.util.Log;
+import android.content.Context;
 import android.util.Pair;
 import android.util.SparseArray;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 
-import org.snu.ids.ha.index.Keyword;
-import org.snu.ids.ha.index.KeywordExtractor;
-import org.snu.ids.ha.index.KeywordList;
+import com.boostcamp.jr.thinktank.model.KeywordObserver;
+
+import java.util.List;
 
 /**
  * Created by jr on 2017-02-12.
@@ -134,41 +136,51 @@ public class KeywordUtil {
 //        return ret;
 //    }
 
-    public static String getKeywordFromContent(String content) {
+//    public static String getKeywordFromContent(String content) {
+//
+//        Log.d(TAG, "1.............................");
+//        Log.d(TAG, "1.............................");
+//        Log.d(TAG, "1.............................");
+//        Log.d(TAG, "1.............................");
+//        Log.d(TAG, "1.............................");
+//        Log.d(TAG, "1.............................");
+//
+//        // init KeywordExtractor
+//        KeywordExtractor ke = new KeywordExtractor();
+//
+//        Log.d(TAG, "1.............................");
+//
+//        // extract keywords
+//        KeywordList kl = ke.extractKeyword(content, true);
+//
+//        Log.d(TAG, "2...............................");
+//
+//        // print result
+//        for( int i = 0; i < kl.size(); i++ ) {
+//            Keyword kwrd = kl.get(i);
+//        }
+//
+//        Log.d(TAG, "3................................");
+//
+//        int cnt = 0;
+//        while(kl.get(cnt).getCnt()
+//                == (kl.get(cnt+1).getCnt())) {
+//            cnt++;
+//        }
+//
+//        int idx = (int)(Math.random() * cnt);
+//        Log.d(TAG, "idx : " + idx + ".............................");
+//        return kl.get(idx).getString();
+//    }
 
-        Log.d(TAG, "1.............................");
-        Log.d(TAG, "1.............................");
-        Log.d(TAG, "1.............................");
-        Log.d(TAG, "1.............................");
-        Log.d(TAG, "1.............................");
-        Log.d(TAG, "1.............................");
+    public static void addAutoCompleteOnTextView(Context context, AutoCompleteTextView textView) {
+        List<String> items = KeywordObserver.get().getAllKeywordNames();
 
-        // init KeywordExtractor
-        KeywordExtractor ke = new KeywordExtractor();
-
-        Log.d(TAG, "1.............................");
-
-        // extract keywords
-        KeywordList kl = ke.extractKeyword(content, true);
-
-        Log.d(TAG, "2...............................");
-
-        // print result
-        for( int i = 0; i < kl.size(); i++ ) {
-            Keyword kwrd = kl.get(i);
-        }
-
-        Log.d(TAG, "3................................");
-
-        int cnt = 0;
-        while(kl.get(cnt).getCnt()
-                == (kl.get(cnt+1).getCnt())) {
-            cnt++;
-        }
-
-        int idx = (int)(Math.random() * cnt);
-        Log.d(TAG, "idx : " + idx + ".............................");
-        return kl.get(idx).getString();
+        textView.setAdapter(new ArrayAdapter<String>(
+                context,
+                android.R.layout.simple_dropdown_item_1line,
+                items
+        ));
     }
 
 }

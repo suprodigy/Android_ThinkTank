@@ -6,7 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/black_de</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -17,6 +17,7 @@
         <item name="android:editTextStyle">@style/AppTheme.Widget.EditText</item>
         <item name="android:buttonStyle">@style/AppTheme.Widget.Button</item>
         <item name="android:checkboxStyle">@style/AppTheme.Widget.CheckBox</item>
+        <item name="android:autoCompleteTextViewStyle">@style/AppTheme.Widget.AutoCompleteTextView</item>
     </style>
 
     <style name="AppTheme.Widget"/>
@@ -35,6 +36,10 @@
 
     <style name="AppTheme.Widget.CheckBox" parent="android:Widget.Holo.Light.CompoundButton.CheckBox">
         <item name="android:textSize">30sp</item>
+    </style>
+
+    <style name="AppTheme.Widget.AutoCompleteTextView" parent="android:Widget.Holo.Light.AutoCompleteTextView">
+        <item name="fontPath">fonts/NanumPen.ttf</item>
     </style>
 
 </resources>

@@ -28,16 +28,26 @@
         <com.github.florent37.materialtextfield.MaterialTextField
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:mtf_hasFocus="true"
             app:mtf_image="@drawable/hashtag"
             app:mtf_labelColor="@color/colorPrimaryDark"
             app:mtf_backgroundColor="@color/colorAccentLight">
 
-            <EditText
+            <!--<EditText
                 android:id="@+id/keyword_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="30sp"
-                android:hint="@string/keyword_edit_text"/>
+                android:textSize="24sp"
+                android:gravity="bottom"
+                android:hint="@string/keyword_edit_text"/>-->
+
+            <AutoCompleteTextView
+                android:id="@+id/keyword_edit_text"
+                android:textSize="26sp"
+                android:hint="@string/keyword_edit_text"
+                android:completionThreshold="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
 
         </com.github.florent37.materialtextfield.MaterialTextField>
 

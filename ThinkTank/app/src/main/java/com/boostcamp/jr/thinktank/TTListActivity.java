@@ -15,11 +15,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
+import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 
 import org.lucasr.dspec.DesignSpec;
 
@@ -44,7 +46,7 @@ public class TTListActivity extends MyActivity {
     TextView mInputKeywordTextView;
 
     @BindView(R.id.input_keyword_edittext)
-    TextView mInputKeywordEditText;
+    AutoCompleteTextView mInputKeywordEditText;
 
     private boolean mInputKeywordEditTextIsVisible;
 
@@ -69,6 +71,8 @@ public class TTListActivity extends MyActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         setSwipeEvent();
+
+        KeywordUtil.addAutoCompleteOnTextView(this, mInputKeywordEditText);
 
 //        /* for text */
 //        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
@@ -219,6 +223,7 @@ public class TTListActivity extends MyActivity {
         mAdapter.updateData(ThinkObserver.get().selectThatHasKeyword(keyword));
         mInputKeywordTextView.setVisibility(View.VISIBLE);
         mInputKeywordEditText.setVisibility(View.INVISIBLE);
+        mRecyclerView.requestFocus();
         mInputKeywordEditTextIsVisible = false;
     }
 

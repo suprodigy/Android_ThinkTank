@@ -10,7 +10,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +28,7 @@ import butterknife.OnClick;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (4) textView animation 적용
+// Keyword 입력하는 EditText에 AutoCompleteTextView 적용하기
 
 public class TTMainActivity extends MyActivity {
 
@@ -40,7 +41,9 @@ public class TTMainActivity extends MyActivity {
     @BindView(R.id.layout_progress_bar)
     View mLayoutProgressBar;
     @BindView(R.id.keyword_input)
-    EditText mKeywordInputEditText;
+    AutoCompleteTextView mKeywordInputEditText;
+
+    ForEffectTask mForEffectTask;
 
     List<TextView> mTextViews = new ArrayList<>();
 
@@ -76,9 +79,11 @@ public class TTMainActivity extends MyActivity {
         // GridLayout에 TextView를 add
         setTextViewsOnGridLayout();
 
-        TestUtil.checkKeyword();
+        // TestUtil.checkKeyword();
 
         initLayoutShowKeyword();
+
+        KeywordUtil.addAutoCompleteOnTextView(this, mKeywordInputEditText);
     }
 
     private void initLayoutShowKeyword() {
@@ -110,7 +115,8 @@ public class TTMainActivity extends MyActivity {
 
     private void setLayoutShowKeyword(String startKeyword) {
 
-        new ForEffectTask().execute(startKeyword);
+        mForEffectTask = new ForEffectTask();
+        mForEffectTask.execute(startKeyword);
 
     }
 
@@ -118,6 +124,12 @@ public class TTMainActivity extends MyActivity {
     protected void onResume() {
         super.onResume();
         initLayoutShowKeyword();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mForEffectTask.setIsCancelled(true);
     }
 
     @Override
@@ -232,12 +244,18 @@ public class TTMainActivity extends MyActivity {
                     @Override
                     public void onClick(View v) {
                         TextView textView = (TextView) v;
-                        String keywordName = KeywordUtil.removeTag(textView.getText().toString());
-                        mIsCancelled = true;
-                        setLayoutShowKeyword(keywordName);
+                        if (textView.getText().length() != 0) {
+                            String keywordName = KeywordUtil.removeTag(textView.getText().toString());
+                            mIsCancelled = true;
+                            setLayoutShowKeyword(keywordName);
+                        }
                     }
                 });
             }
+        }
+
+        public void setIsCancelled(boolean flag) {
+            mIsCancelled = flag;
         }
 
     }

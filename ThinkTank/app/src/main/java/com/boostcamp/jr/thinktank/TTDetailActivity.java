@@ -44,7 +44,7 @@ import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
 // DONE (2) 사진 추가, 공유 기능 추가 - db 연동X
-// TODO (3) 검색 기능 추가
+// DONE (3) 검색 기능 추가
 // TODO (5) Content 꾸미기 기능 추가 (Spannable)
 // TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
@@ -444,13 +444,13 @@ public class TTDetailActivity extends MyActivity {
 
         @Override
         protected String doInBackground(String... params) {
-//            String content = params[0];
-
-            Log.d(TAG, "키워드를 추출합니다...");
-            String content = "단어";
-
-            String keywordExtracted = KeywordUtil.getKeywordFromContent(content);
-
+////            String content = params[0];
+//
+//            Log.d(TAG, "키워드를 추출합니다...");
+//            String content = "단어";
+//
+//            String keywordExtracted = KeywordUtil.getKeywordFromContent(content);
+//
 //            for(String noun : mNouns) {
 //                NaverRestClient<KeywordService> client = new NaverRestClient<>();
 //                KeywordService service = client.getClient(KeywordService.class);
@@ -484,9 +484,10 @@ public class TTDetailActivity extends MyActivity {
 //                    }
 //                });
 //            }
-
-            Log.d(TAG, "keywordExtracted : " + keywordExtracted);
-            return keywordExtracted;
+//
+//            Log.d(TAG, "keywordExtracted : " + keywordExtracted);
+//            return keywordExtracted;
+            return null;
         }
 
         @Override

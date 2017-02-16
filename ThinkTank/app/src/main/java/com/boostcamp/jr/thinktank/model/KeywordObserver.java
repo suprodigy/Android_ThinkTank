@@ -1,5 +1,8 @@
 package com.boostcamp.jr.thinktank.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.realm.OrderedRealmCollection;
 import io.realm.Realm;
 import io.realm.Sort;
@@ -93,6 +96,20 @@ public class KeywordObserver {
             return null;
         }
 
+    }
+
+    public List<String> getAllKeywordNames() {
+        List<String> ret = new ArrayList<>();
+
+        Realm realm = Realm.getDefaultInstance();
+
+        OrderedRealmCollection<KeywordItem> keywordItems = selectAll();
+
+        for (KeywordItem item : keywordItems) {
+            ret.add(item.getName());
+        }
+
+        return ret;
     }
 
 }
