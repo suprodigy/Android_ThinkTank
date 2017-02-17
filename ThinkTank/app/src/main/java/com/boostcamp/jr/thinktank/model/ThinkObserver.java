@@ -35,21 +35,17 @@ public class ThinkObserver {
     public void insert(final ThinkItem item) {
         Realm realm = Realm.getDefaultInstance();
 
-        if (selectItemThatHasId(item.getId()) == null) {
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.createObject(ThinkItem.class, item.getId())
+                        .setContent(item.getContent())
+                        .setKeywords(item.getKeywords())
+                        .setImagePaths(item.getImagePaths());
+            }
+        });
 
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.createObject(ThinkItem.class, item.getId())
-                            .setContent(item.getContent())
-                            .setKeywords(item.getKeywords())
-                            .setImagePaths(item.getImagePaths());
-                }
-            });
-
-            KeywordManager.get().updateKeywordRelation(item);
-
-        }
+        KeywordManager.get().updateKeywordRelation(item);
 
     }
 

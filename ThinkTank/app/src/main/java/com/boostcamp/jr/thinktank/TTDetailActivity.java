@@ -8,9 +8,9 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.util.Pair;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -29,6 +29,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.boostcamp.jr.thinktank.image.ImagePagerActivity;
+import com.boostcamp.jr.thinktank.image.ImageRepository;
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
 import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
@@ -56,8 +58,8 @@ import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
 // DONE (2) 사진 추가, 공유 기능 추가 - db 연동X
-// TODO (3) 사진 DB 연동 - 삭제 시 사진도 없어지게...
-// TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick effect
+// DONE (3) 사진 DB 연동 - 삭제 시 사진도 없어지게...
+// TODO (5) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
 /**
  *
@@ -90,7 +92,6 @@ public class TTDetailActivity extends MyActivity {
     private File mTemporaryFile;
     private List<File> mImageFiles = new ArrayList<>();
     private ImageAdapter mImageAdapter;
-    private boolean mHasToSave = true;
 
     // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
@@ -184,7 +185,6 @@ public class TTDetailActivity extends MyActivity {
 
         Uri uri = Uri.fromFile(mTemporaryFile);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        mHasToSave = false;
         startActivityForResult(intent, REQUEST_PHOTO);
     }
 
@@ -193,7 +193,6 @@ public class TTDetailActivity extends MyActivity {
         Intent i = new Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(i, REQUEST_LOAD_IMAGE);
-        mHasToSave = false;
     }
 
     @OnClick(R.id.share_button)
@@ -309,12 +308,7 @@ public class TTDetailActivity extends MyActivity {
         }
 
         DesignSpec background = DesignSpec.fromResource(mLayout, R.raw.background);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            mLayout.getOverlay().add(background);
-        } else {
-            mLayout.setBackground(background);
-        }
-
+        mLayout.setBackground(background);
 
         init();
         setEventListener();
@@ -354,8 +348,12 @@ public class TTDetailActivity extends MyActivity {
             mImageAdapter = new ImageAdapter(mImageFiles);
         }
 
-        mLayoutForImage.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        mLayoutForImage.setLayoutManager(layoutManager);
         mLayoutForImage.setAdapter(mImageAdapter);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mLayoutForImage.getContext(),
+                layoutManager.getOrientation());
+        mLayoutForImage.addItemDecoration(dividerItemDecoration);
         setSwipeEvent();
     }
 
@@ -445,52 +443,61 @@ public class TTDetailActivity extends MyActivity {
     protected void onPause() {
         super.onPause();
 
-        if (mHasToSave) {
-
-            String content = mThinkItem.getContent();
-            if (content == null || content.length() == 0
-                    || mKeywordStrings.size() == 0) {
-                return;
-            }
-
-            RealmList<KeywordItem> keywords = new RealmList<>();
-            for (Pair<String, Boolean> keyword : mKeywordStrings) {
-                if (!keyword.second) {
-                    KeywordManager.get().createOrUpdateKeyword(keyword.first);
-                }
-                keywords.add(KeywordObserver.get().getKeywordByName(keyword.first));
-            }
-            mThinkItem.setKeywords(keywords);
-
-            String[] pathStrings = new String[mImageFiles.size()];
-
-            MyLog.print(mImageFiles.size() + "");
-
-            for (int i=0; i < mImageFiles.size(); i++) {
-                pathStrings[i] = mImageFiles.get(i).getPath();
-                MyLog.print(mImageFiles.get(i).getPath());
-            }
-
-            String imageNames = TextUtils.join(",", pathStrings);
-
-            MyLog.print(imageNames);
-
-            mThinkItem.setImagePaths(imageNames);
-
-            ThinkObserver thinkObserver = ThinkObserver.get();
-            if (!mIsAdded) {
-                thinkObserver.insert(mThinkItem);
-            } else if (!mDeleted) {
-                mThinkItem.setDateUpdated(new Date());
-                thinkObserver.update(mThinkItem);
-            }
-
+        if(mDeleted) {
+            return;
         }
+
+        String content = mThinkItem.getContent();
+        if (content == null || content.length() == 0
+                || mKeywordStrings.size() == 0) {
+            return;
+        }
+
+        RealmList<KeywordItem> keywords = new RealmList<>();
+        List<Pair<String, Boolean>> newKeywordStrings = new ArrayList<>();
+        for (Pair<String, Boolean> keyword : mKeywordStrings) {
+            if (!keyword.second) {
+                KeywordManager.get().createOrUpdateKeyword(keyword.first);
+            }
+            keywords.add(KeywordObserver.get().getKeywordByName(keyword.first));
+            newKeywordStrings.add(new Pair<>(keyword.first, true));
+        }
+        mKeywordStrings = newKeywordStrings;
+        mThinkItem.setKeywords(keywords);
+
+        String[] pathStrings = new String[mImageFiles.size()];
+
+        MyLog.print(mImageFiles.size() + "!!!!!");
+
+        for (int i = 0; i < mImageFiles.size(); i++) {
+            pathStrings[i] = mImageFiles.get(i).getPath();
+            MyLog.print(mImageFiles.get(i).getPath());
+        }
+
+        String imageNames = TextUtils.join(",", pathStrings);
+
+        MyLog.print(imageNames + "!!!!!!");
+
+        mThinkItem.setImagePaths(imageNames);
+
+        ThinkObserver thinkObserver = ThinkObserver.get();
+
+        mIsAdded = (thinkObserver.selectItemThatHasId(mThinkItem.getId()) != null);
+
+        if (!mIsAdded) {
+            thinkObserver.insert(mThinkItem);
+            MyLog.print("inserted..........");
+        } else {
+            mThinkItem.setDateUpdated(new Date());
+            thinkObserver.update(mThinkItem);
+            MyLog.print("updated...........");
+        }
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mHasToSave = true;
+
 
         if (resultCode != RESULT_OK) {
             return;
@@ -643,15 +650,14 @@ public class TTDetailActivity extends MyActivity {
             implements View.OnClickListener {
 
         private File mFile;
-        private boolean mIsLoaded;
 
         @BindView(R.id.photo_image_view)
         ImageView mPhotoImageView;
 
         public ImageHolder(View itemView) {
             super(itemView);
-
             ButterKnife.bind(this, itemView);
+            itemView.setOnClickListener(this);
         }
 
         public void bindImage(File photoFile) {
@@ -665,21 +671,10 @@ public class TTDetailActivity extends MyActivity {
                 }
             });
 
-            mIsLoaded = true;
-
-            MyLog.print(photoFile.getPath());
-
-            MyLog.print(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES) + photoFile.getName());
-
-            if (PhotoUtil.isMyImage(getApplicationContext(), mFile)) {
-                mIsLoaded = false;
-            }
-
             Bitmap bitmap = PhotoUtil.getScaledBitmap(photoFile.getPath(),
                     mPhotoImageView.getWidth(),
-                    mPhotoImageView.getHeight(),
-                    mIsLoaded);
+                    mPhotoImageView.getHeight());
+
             mPhotoImageView.setImageBitmap(bitmap);
         }
 
@@ -687,14 +682,16 @@ public class TTDetailActivity extends MyActivity {
             if (mFile == null || !mFile.exists()) {
                 removeFile(mFile);
             } else {
-                Bitmap bitmap = PhotoUtil.getScaledBitmap(mFile.getPath(), destWidth, destHeight, mIsLoaded);
+                Bitmap bitmap = PhotoUtil.getScaledBitmap(mFile.getPath(), destWidth, destHeight);
                 mPhotoImageView.setImageBitmap(bitmap);
             }
         }
 
         @Override
         public void onClick(View v) {
-
+            ImageRepository.get().setFiles(mImageFiles);
+            Intent intent = ImagePagerActivity.newIntent(getApplicationContext(), getAdapterPosition());
+            startActivity(intent);
         }
     }
 

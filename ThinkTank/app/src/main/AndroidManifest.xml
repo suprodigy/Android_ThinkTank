@@ -3,7 +3,6 @@
           package="com.boostcamp.jr.thinktank">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
@@ -18,20 +17,19 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-
         <activity android:name=".TTMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity
             android:name=".TTListActivity"
             android:parentActivityName=".TTMainActivity"/>
-
         <activity android:name=".TTDetailActivity"/>
-
+        <activity android:name=".image.ImagePagerActivity">
+        </activity>
     </application>
 
 </manifest>
