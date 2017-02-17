@@ -1,6 +1,12 @@
 package com.boostcamp.jr.thinktank.model;
 
+import android.content.Context;
+
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
+import com.boostcamp.jr.thinktank.utils.MyLog;
+import com.boostcamp.jr.thinktank.utils.PhotoUtil;
+
+import java.io.File;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.Realm;
@@ -29,16 +35,21 @@ public class ThinkObserver {
     public void insert(final ThinkItem item) {
         Realm realm = Realm.getDefaultInstance();
 
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.createObject(ThinkItem.class, item.getId())
-                        .setContent(item.getContent())
-                        .setKeywords(item.getKeywords());
-            }
-        });
+        if (selectItemThatHasId(item.getId()) == null) {
 
-        KeywordManager.get().updateKeywordRelation(item);
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.createObject(ThinkItem.class, item.getId())
+                            .setContent(item.getContent())
+                            .setKeywords(item.getKeywords())
+                            .setImagePaths(item.getImagePaths());
+                }
+            });
+
+            KeywordManager.get().updateKeywordRelation(item);
+
+        }
 
     }
 
@@ -56,17 +67,20 @@ public class ThinkObserver {
 
     }
 
-    public void delete(ThinkItem item) {
+    public void delete(Context context, ThinkItem item) {
         Realm realm = Realm.getDefaultInstance();
 
         final ThinkItem ItemToDelete = realm.where(ThinkItem.class)
                 .equalTo("id", item.getId()).findFirst();
+
+        deleteImageFile(context, ItemToDelete);
 
         KeywordObserver observer = KeywordObserver.get();
         RealmList<KeywordItem> list = ItemToDelete.getKeywords();
         for(KeywordItem keyword : list) {
             KeywordItem temp = observer.getCopiedObject(keyword);
             temp.setCount(temp.getCount()-1);
+//            MyLog.print("count update : " + temp.getCount());
             KeywordManager.get().updateCountMap(temp);
             observer.update(temp);
         }
@@ -105,4 +119,25 @@ public class ThinkObserver {
         return realm.where(ThinkItem.class).equalTo("id", id).findFirst();
     }
 
+    private void deleteImageFile(Context context, ThinkItem item) {
+        String pathsString = item.getImagePaths();
+
+        if (pathsString == null || pathsString.length() == 0) {
+
+            return;
+
+        } else {
+
+            MyLog.print(pathsString);
+            String[] pathStrings = pathsString.split(",");
+            for (String pathString : pathStrings) {
+                File photoFile = new File(pathString);
+                if (PhotoUtil.isMyImage(context, photoFile)) {
+                    photoFile.delete();
+                }
+            }
+
+        }
+
+    }
 }

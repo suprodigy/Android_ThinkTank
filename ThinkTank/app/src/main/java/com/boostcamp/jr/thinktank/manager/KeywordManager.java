@@ -152,6 +152,10 @@ public class KeywordManager {
      */
     public List<Pair<String, Integer>> getKeywordByBFS(String keywordStarted) {
 
+        if (!isKeywordExist(keywordStarted)) {
+            return null;
+        }
+
         List<Pair<String, Integer>> ret = new ArrayList<>();
 
         boolean[] checked = new boolean[mCount];
@@ -164,6 +168,7 @@ public class KeywordManager {
                 });
 
         int startIdx = mKeyMap.get(keywordStarted);
+
         checked[startIdx] = true;
         pq.offer(new Pair<>(startIdx, mCountMap.get(keywordStarted)));
 

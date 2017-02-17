@@ -1,8 +1,13 @@
 package com.boostcamp.jr.thinktank;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Pair;
@@ -10,6 +15,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +23,7 @@ import android.widget.Toast;
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
+import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.TestUtil;
 
 import java.util.ArrayList;
@@ -59,9 +66,13 @@ public class TTMainActivity extends MyActivity {
         if (mKeywordInputEditText.getText().length() == 0) {
             Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
         } else {
-            String keyword = mKeywordInputEditText.getText().toString();
-            Intent intent = TTListActivity.newIntent(getApplicationContext(), keyword);
-            startActivity(intent);
+            String keywordName = mKeywordInputEditText.getText().toString();
+            View view = this.getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+            setLayoutShowKeyword(keywordName);
         }
     }
 
@@ -79,11 +90,14 @@ public class TTMainActivity extends MyActivity {
         // GridLayout에 TextView를 add
         setTextViewsOnGridLayout();
 
-        // TestUtil.checkKeyword();
+        TestUtil.checkKeyword();
 
         initLayoutShowKeyword();
 
+        isStoragePermissionGranted();
+
         KeywordUtil.addAutoCompleteOnTextView(this, mKeywordInputEditText);
+
     }
 
     private void initLayoutShowKeyword() {
@@ -115,6 +129,10 @@ public class TTMainActivity extends MyActivity {
 
     private void setLayoutShowKeyword(String startKeyword) {
 
+        if(mForEffectTask != null) {
+            mForEffectTask.setIsCancelled(true);
+        }
+
         mForEffectTask = new ForEffectTask();
         mForEffectTask.execute(startKeyword);
 
@@ -129,12 +147,16 @@ public class TTMainActivity extends MyActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mForEffectTask.setIsCancelled(true);
+
+        if (mForEffectTask != null) {
+            mForEffectTask.cancel(true);
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_main, menu);
+
         return true;
     }
 
@@ -152,6 +174,24 @@ public class TTMainActivity extends MyActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                MyLog.print("Permission is granted");
+                return true;
+            } else {
+                MyLog.print("Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else {
+            //permission is automatically granted on sdk<23 upon installation
+            MyLog.print("Permission is granted");
+            return true;
+        }
+    }
 
     // text data 생성 후 mLayoutShowKeyword set
     private class TestTask extends AsyncTask<Void, Void, Void> {
@@ -208,11 +248,15 @@ public class TTMainActivity extends MyActivity {
 
             String startKeyword = params[0];
 
-            mKeywordList = KeywordManager.get().getKeywordByBFS(startKeyword);
+            KeywordManager keywordManager = KeywordManager.get();
 
-//            Log.d("TTMainActivity", mKeywordList.size() + ".................................");
+            mKeywordList = keywordManager.getKeywordByBFS(startKeyword);
 
-            mMinMaxCount = KeywordManager.get().getMinMaxCount(mKeywordList);
+            if (mKeywordList == null) {
+                return null;
+            }
+
+            mMinMaxCount = keywordManager.getMinMaxCount(mKeywordList);
 
             try {
                 for (int i = 0; i < mKeywordList.size(); i++) {
@@ -220,9 +264,8 @@ public class TTMainActivity extends MyActivity {
                         break;
                     }
 
-                    // Log.d("AsyncTask", i + "번째 publish!!!!");
                     publishProgress(i);
-                    Thread.sleep(300);
+                    Thread.sleep(100);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -246,8 +289,8 @@ public class TTMainActivity extends MyActivity {
                         TextView textView = (TextView) v;
                         if (textView.getText().length() != 0) {
                             String keywordName = KeywordUtil.removeTag(textView.getText().toString());
-                            mIsCancelled = true;
-                            setLayoutShowKeyword(keywordName);
+                            Intent intent = TTListActivity.newIntent(getApplicationContext(), keywordName);
+                            startActivity(intent);
                         }
                     }
                 });

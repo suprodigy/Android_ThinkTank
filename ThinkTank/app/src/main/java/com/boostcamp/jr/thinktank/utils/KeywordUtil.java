@@ -108,20 +108,20 @@ public class KeywordUtil {
 //        // ex) 이닼ㅋㅋㅋ -> 이다ㅋㅋㅋ
 //        CharSequence nomalized = TwitterKoreanProcessorJava.normalize(text);
 //
-//        Log.d(TAG, text.equals("메모를 입력하세요") ? "true" : "false");
-//        Log.d(TAG, nomalized.toString());
-//        Log.d(TAG, "size : " + nomalized.length());
+//        MyLog.print(text.equals("메모를 입력하세요") ? "true" : "false");
+//        MyLog.print(nomalized.toString());
+//        MyLog.print("size : " + nomalized.length());
 //
 //        // nomalized된 text를 토큰화 (품사별로 분리)
 //        Seq<KoreanTokenizer.KoreanToken> tokens = TwitterKoreanProcessorJava.tokenize(nomalized);
 //
-//        Log.d(TAG, tokens.toString());
+//        MyLog.print(tokens.toString());
 //
 //        // 토근화된 단어를 List 형대로 가지고 있는 tokens에서 명사만 추출
 //        List<KoreanPhraseExtractor.KoreanPhrase> phrases =
 //                TwitterKoreanProcessorJava.extractPhrases(tokens, true, true);
 //
-//        Log.d(TAG, phrases.toString());
+//        MyLog.print(phrases.toString());
 //
 //        // 명사로 된 단어들만 리스트에 담아서 리턴
 //        List<String> ret = new ArrayList<>();
@@ -138,29 +138,27 @@ public class KeywordUtil {
 
 //    public static String getKeywordFromContent(String content) {
 //
-//        Log.d(TAG, "1.............................");
-//        Log.d(TAG, "1.............................");
-//        Log.d(TAG, "1.............................");
-//        Log.d(TAG, "1.............................");
-//        Log.d(TAG, "1.............................");
-//        Log.d(TAG, "1.............................");
+//        MyLog.print("1.............................");
+//        MyLog.print("1.............................");
+//        MyLog.print("1.............................");
+//        MyLog.print("1.............................");
 //
 //        // init KeywordExtractor
 //        KeywordExtractor ke = new KeywordExtractor();
 //
-//        Log.d(TAG, "1.............................");
+//        MyLog.print("1.............................");
 //
 //        // extract keywords
 //        KeywordList kl = ke.extractKeyword(content, true);
 //
-//        Log.d(TAG, "2...............................");
+//        MyLog.print("2...............................");
 //
 //        // print result
 //        for( int i = 0; i < kl.size(); i++ ) {
 //            Keyword kwrd = kl.get(i);
 //        }
 //
-//        Log.d(TAG, "3................................");
+//        MyLog.print("3................................");
 //
 //        int cnt = 0;
 //        while(kl.get(cnt).getCnt()
@@ -169,7 +167,7 @@ public class KeywordUtil {
 //        }
 //
 //        int idx = (int)(Math.random() * cnt);
-//        Log.d(TAG, "idx : " + idx + ".............................");
+//        MyLog.print("idx : " + idx + ".............................");
 //        return kl.get(idx).getString();
 //    }
 

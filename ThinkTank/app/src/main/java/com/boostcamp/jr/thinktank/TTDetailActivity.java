@@ -3,19 +3,28 @@ package com.boostcamp.jr.thinktank;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.util.Pair;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,10 +35,13 @@ import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
+import com.boostcamp.jr.thinktank.utils.MyLog;
+import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 import com.github.clans.fab.FloatingActionButton;
 
 import org.lucasr.dspec.DesignSpec;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -44,8 +56,7 @@ import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
 // DONE (2) 사진 추가, 공유 기능 추가 - db 연동X
-// DONE (3) 검색 기능 추가
-// TODO (5) Content 꾸미기 기능 추가 (Spannable)
+// TODO (3) 사진 DB 연동 - 삭제 시 사진도 없어지게...
 // TODO (6) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
 /**
@@ -62,7 +73,6 @@ public class TTDetailActivity extends MyActivity {
     // EXTRA_POSITION은 Intent Extra의 Key 값
     public static final String EXTRA_ID = "com.boostcamp.jr.thinktank.id";
 
-
     private static final int REQUEST_PHOTO = 0;
     private static final int REQUEST_LOAD_IMAGE = 1;
 
@@ -72,14 +82,15 @@ public class TTDetailActivity extends MyActivity {
         return intent;
     }
 
-    // Log 찍기 위해 정의한 상수
-    private static final String TAG = "TTDetailActivity";
-
     // Fields...
     private ThinkItem mThinkItem;
     private boolean mDeleted;
     private boolean mIsAdded;
     private List<Pair<String, Boolean>> mKeywordStrings = new ArrayList<>();
+    private File mTemporaryFile;
+    private List<File> mImageFiles = new ArrayList<>();
+    private ImageAdapter mImageAdapter;
+    private boolean mHasToSave = true;
 
     // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
@@ -93,7 +104,7 @@ public class TTDetailActivity extends MyActivity {
     View mLayout;
 
     @BindView(R.id.layout_for_image)
-    LinearLayout mLayoutForImage;
+    RecyclerView mLayoutForImage;
 
     @BindView(R.id.think_keyword)
     TextView mKeywordTextView;
@@ -163,13 +174,26 @@ public class TTDetailActivity extends MyActivity {
     @OnClick(R.id.take_photo_button)
     void onTakePhotoButtonClicked() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String fileName = mThinkItem.getId() + "_" + mImageFiles.size() + ".jpg";
+        mTemporaryFile = PhotoUtil.getPhotoFile(this, fileName);
+
+        if (mTemporaryFile == null) {
+            Toast.makeText(this, getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Uri uri = Uri.fromFile(mTemporaryFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        mHasToSave = false;
         startActivityForResult(intent, REQUEST_PHOTO);
     }
 
     @OnClick(R.id.get_image_from_gallery)
     void onImageButtonClicked() {
-        Intent i = new Intent(Intent.ACTION_PICK,android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent i = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(i, REQUEST_LOAD_IMAGE);
+        mHasToSave = false;
     }
 
     @OnClick(R.id.share_button)
@@ -184,8 +208,7 @@ public class TTDetailActivity extends MyActivity {
 
     @OnClick(R.id.delete_button)
     void onDeleteButtonClicked() {
-        // Log.d("onDelete()", "" + mThinkItem.getId());
-        ThinkObserver.get().delete(mThinkItem);
+        ThinkObserver.get().delete(this, mThinkItem);
         mDeleted = true;
         finish();
     }
@@ -281,7 +304,7 @@ public class TTDetailActivity extends MyActivity {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         } catch (NullPointerException e) {
-            Log.e(TAG, "No action bar in " + TAG);
+            MyLog.print("No action bar in TTDetailActivity");
             e.printStackTrace();
         }
 
@@ -291,6 +314,7 @@ public class TTDetailActivity extends MyActivity {
         } else {
             mLayout.setBackground(background);
         }
+
 
         init();
         setEventListener();
@@ -307,6 +331,58 @@ public class TTDetailActivity extends MyActivity {
         } else {
             setIfItemAdded(id);
         }
+
+        initImageAdapter();
+    }
+
+    private void initImageAdapter() {
+        String pathsString = mThinkItem.getImagePaths();
+
+        if (pathsString == null || pathsString.length() == 0) {
+
+            mImageAdapter = new ImageAdapter(null);
+
+        } else {
+
+            MyLog.print(pathsString);
+            String[] pathStrings = pathsString.split(",");
+            for (String pathString : pathStrings) {
+                File photoFile = new File(pathString);
+                mImageFiles.add(photoFile);
+            }
+
+            mImageAdapter = new ImageAdapter(mImageFiles);
+        }
+
+        mLayoutForImage.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        mLayoutForImage.setAdapter(mImageAdapter);
+        setSwipeEvent();
+    }
+
+    private void setSwipeEvent() {
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.UP | ItemTouchHelper.DOWN) {
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                File photoFile = mImageFiles.get(position);
+                removeFile(photoFile);
+            }
+        }).attachToRecyclerView(mLayoutForImage);
+    }
+
+    private void removeFile(File photoFile) {
+        if (PhotoUtil.isMyImage(getApplicationContext(), photoFile)) {
+            photoFile.delete();
+        }
+        mImageFiles.remove(photoFile);
+        mImageAdapter.swapFiles(mImageFiles);
+        mImageAdapter.notifyDataSetChanged();
     }
 
     private void initImageButton() {
@@ -328,6 +404,11 @@ public class TTDetailActivity extends MyActivity {
         ThinkObserver observer = ThinkObserver.get();
         ThinkItem passedItem = observer.selectItemThatHasId(id);
         mThinkItem = observer.getCopiedObject(passedItem);
+
+        if (mThinkItem.getImagePaths() != null) {
+            MyLog.print(mThinkItem.getImagePaths());
+        }
+
         setView();
     }
 
@@ -350,13 +431,11 @@ public class TTDetailActivity extends MyActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Log.d(TAG, "onTextChanged()................");
                 mThinkItem.setContent(s.toString());
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                // Log.d(TAG, "afterTextChanged()..............");
             }
         });
 
@@ -366,27 +445,89 @@ public class TTDetailActivity extends MyActivity {
     protected void onPause() {
         super.onPause();
 
-        String content = mThinkItem.getContent();
-        if (content == null || content.length() == 0
-                || mKeywordStrings.size() == 0) {
+        if (mHasToSave) {
+
+            String content = mThinkItem.getContent();
+            if (content == null || content.length() == 0
+                    || mKeywordStrings.size() == 0) {
+                return;
+            }
+
+            RealmList<KeywordItem> keywords = new RealmList<>();
+            for (Pair<String, Boolean> keyword : mKeywordStrings) {
+                if (!keyword.second) {
+                    KeywordManager.get().createOrUpdateKeyword(keyword.first);
+                }
+                keywords.add(KeywordObserver.get().getKeywordByName(keyword.first));
+            }
+            mThinkItem.setKeywords(keywords);
+
+            String[] pathStrings = new String[mImageFiles.size()];
+
+            MyLog.print(mImageFiles.size() + "");
+
+            for (int i=0; i < mImageFiles.size(); i++) {
+                pathStrings[i] = mImageFiles.get(i).getPath();
+                MyLog.print(mImageFiles.get(i).getPath());
+            }
+
+            String imageNames = TextUtils.join(",", pathStrings);
+
+            MyLog.print(imageNames);
+
+            mThinkItem.setImagePaths(imageNames);
+
+            ThinkObserver thinkObserver = ThinkObserver.get();
+            if (!mIsAdded) {
+                thinkObserver.insert(mThinkItem);
+            } else if (!mDeleted) {
+                mThinkItem.setDateUpdated(new Date());
+                thinkObserver.update(mThinkItem);
+            }
+
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mHasToSave = true;
+
+        if (resultCode != RESULT_OK) {
             return;
         }
 
-        RealmList<KeywordItem> keywords = new RealmList<>();
-        for (Pair<String, Boolean> keyword : mKeywordStrings) {
-            if (!keyword.second) {
-                KeywordManager.get().createOrUpdateKeyword(keyword.first);
+        if (requestCode == REQUEST_PHOTO) {
+            if (mTemporaryFile != null && mTemporaryFile.exists()) {
+                mImageFiles.add(mTemporaryFile);
+                mImageAdapter.swapFiles(mImageFiles);
             }
-            keywords.add(KeywordObserver.get().getKeywordByName(keyword.first));
-        }
-        mThinkItem.setKeywords(keywords);
+        } else if (requestCode == REQUEST_LOAD_IMAGE) {
 
-        ThinkObserver thinkObserver = ThinkObserver.get();
-        if (!mIsAdded) {
-            thinkObserver.insert(mThinkItem);
-        } else if (!mDeleted) {
-            mThinkItem.setDateUpdated(new Date());
-            thinkObserver.update(mThinkItem);
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                    Cursor cursor = getContentResolver().query(
+                            selectedImage, filePathColumn, null, null, null
+                    );
+                    cursor.moveToFirst();
+
+                    int columnIdx = cursor.getColumnIndex(filePathColumn[0]);
+                    String filePath = cursor.getString(columnIdx);
+                    cursor.close();
+
+                    File file = new File(filePath);
+
+                    MyLog.print(filePath);
+
+                    mImageFiles.add(file);
+                    mImageAdapter.swapFiles(mImageFiles);
+                } else {
+                    Toast.makeText(this, getString(R.string.no_permission), Toast.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 
@@ -430,21 +571,21 @@ public class TTDetailActivity extends MyActivity {
         mKeywordTextView.setText(keywordString);
     }
 
-    private class GetKeywordTask extends AsyncTask<String, Void, String> {
-
-        Context mContext;
-
-        @Override
-        protected void onPreExecute() {
-            mContext = getApplicationContext();
-            Toast.makeText(mContext, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
-            Toast.makeText(mContext,
-                    getString(R.string.explain_get_keyword_automatically), Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-////            String content = params[0];
+//    private class GetKeywordTask extends AsyncTask<String, Void, String> {
+//
+//        Context mContext;
+//
+//        @Override
+//        protected void onPreExecute() {
+//            mContext = getApplicationContext();
+//            Toast.makeText(mContext, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext,
+//                    getString(R.string.explain_get_keyword_automatically), Toast.LENGTH_SHORT).show();
+//        }
+//
+//        @Override
+//        protected String doInBackground(String... params) {
+//            String content = params[0];
 //
 //            Log.d(TAG, "키워드를 추출합니다...");
 //            String content = "단어";
@@ -487,14 +628,105 @@ public class TTDetailActivity extends MyActivity {
 //
 //            Log.d(TAG, "keywordExtracted : " + keywordExtracted);
 //            return keywordExtracted;
-            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String keywordName) {
+//            Toast.makeText(mContext,
+//                    getString(R.string.after_get_keyword, keywordName), Toast.LENGTH_LONG).show();
+//            getKeywordFromDialog(keywordName);
+//        }
+//
+//    }
+
+    public class ImageHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
+
+        private File mFile;
+        private boolean mIsLoaded;
+
+        @BindView(R.id.photo_image_view)
+        ImageView mPhotoImageView;
+
+        public ImageHolder(View itemView) {
+            super(itemView);
+
+            ButterKnife.bind(this, itemView);
+        }
+
+        public void bindImage(File photoFile) {
+            mFile = photoFile;
+
+            ViewTreeObserver observer = mPhotoImageView.getViewTreeObserver();
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    updatePhotoView(mPhotoImageView.getWidth(), mPhotoImageView.getHeight());
+                }
+            });
+
+            mIsLoaded = true;
+
+            MyLog.print(photoFile.getPath());
+
+            MyLog.print(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES) + photoFile.getName());
+
+            if (PhotoUtil.isMyImage(getApplicationContext(), mFile)) {
+                mIsLoaded = false;
+            }
+
+            Bitmap bitmap = PhotoUtil.getScaledBitmap(photoFile.getPath(),
+                    mPhotoImageView.getWidth(),
+                    mPhotoImageView.getHeight(),
+                    mIsLoaded);
+            mPhotoImageView.setImageBitmap(bitmap);
+        }
+
+        private void updatePhotoView(int destWidth, int destHeight) {
+            if (mFile == null || !mFile.exists()) {
+                removeFile(mFile);
+            } else {
+                Bitmap bitmap = PhotoUtil.getScaledBitmap(mFile.getPath(), destWidth, destHeight, mIsLoaded);
+                mPhotoImageView.setImageBitmap(bitmap);
+            }
         }
 
         @Override
-        protected void onPostExecute(String keywordName) {
-            Toast.makeText(mContext,
-                    getString(R.string.after_get_keyword, keywordName), Toast.LENGTH_LONG).show();
-            getKeywordFromDialog(keywordName);
+        public void onClick(View v) {
+
+        }
+    }
+
+
+    private class ImageAdapter extends RecyclerView.Adapter<ImageHolder> {
+
+        List<File> mFiles;
+
+        public ImageAdapter(List<File> files) {
+            mFiles = files;
+        }
+
+        @Override
+        public ImageHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = getLayoutInflater().inflate(R.layout.image_list_item, null, false);
+            return new ImageHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(ImageHolder holder, int position) {
+            File file = mFiles.get(position);
+            holder.bindImage(file);
+        }
+
+        @Override
+        public int getItemCount() {
+            return (mFiles == null) ? 0 : mFiles.size();
+        }
+
+        public void swapFiles(List<File> newFiles) {
+            mFiles = newFiles;
+            notifyDataSetChanged();
         }
 
     }

@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -76,7 +75,7 @@ public class TTListActivity extends MyActivity {
 
 //        /* for text */
 //        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
-//        Log.d("TTListActivity", "onCreate() : " + list.size());
+//        MyLog.print("onCreate() : " + list.size());
 //        for(KeywordItem item : list) {
 //            Log.d("TTListActivity", item.getName() + ", " + item.getCount());
 //        }
@@ -109,7 +108,7 @@ public class TTListActivity extends MyActivity {
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 ThinkItem swipedItem = mAdapter.getData().get(position);
-                ThinkObserver.get().delete(swipedItem);
+                ThinkObserver.get().delete(getApplicationContext(), swipedItem);
             }
         }).attachToRecyclerView(mRecyclerView);
     }
@@ -190,6 +189,7 @@ public class TTListActivity extends MyActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_list, menu);
+
         return true;
     }
 
@@ -201,10 +201,8 @@ public class TTListActivity extends MyActivity {
             if (!mInputKeywordEditTextIsVisible) {
                 showInputKeywordEditText();
             } else if (mInputKeywordEditText.getText().length() != 0) {
-                Log.d("TTListActivity", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 String keyword = mInputKeywordEditText.getText().toString();
                 showInputKeywordTextView(keyword);
-
             }
             return true;
         }

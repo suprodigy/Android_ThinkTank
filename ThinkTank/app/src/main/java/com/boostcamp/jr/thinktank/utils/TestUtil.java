@@ -1,7 +1,6 @@
 package com.boostcamp.jr.thinktank.utils;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.boostcamp.jr.thinktank.R;
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
@@ -58,7 +57,7 @@ public class TestUtil {
         OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
 
         for(KeywordItem item : list) {
-            Log.d("ThinkTank", item.getId() + ". " + item.getName() + " : " + "count = " + item.getCount() +
+            MyLog.print(item.getId() + ". " + item.getName() + " : " + "count = " + item.getCount() +
                 ", relation = " + toBinary(item.getRelation()));
         }
     }
@@ -83,20 +82,20 @@ public class TestUtil {
 
                 if (response.isSuccessful()) {
                     ResponseFromNaver responseFromNaver = response.body();
-                    Log.d("TEST" , responseFromNaver.getCount() + "");
+                    MyLog.print(responseFromNaver.getCount() + "");
                     List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
                     for (ResponseFromNaver.Item item : items) {
-                        Log.d("TEST", item.getTitle());
+                        MyLog.print(item.getTitle());
                     }
                 } else {
-                    Log.d("TEST", "호출 실패 :" + response.errorBody());
+                    MyLog.print("호출 실패 :" + response.errorBody());
                 }
 
             }
 
             @Override
             public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
-                Log.d("TEST", "오류 발생");
+                MyLog.print("오류 발생");
                 t.printStackTrace();
             }
         });

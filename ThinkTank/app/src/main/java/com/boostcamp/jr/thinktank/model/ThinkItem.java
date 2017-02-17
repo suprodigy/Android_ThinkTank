@@ -22,6 +22,7 @@ public class ThinkItem extends RealmObject {
     private String content;
     private RealmList<KeywordItem> keywords;
     private Date dateUpdated;
+    private String imagePaths;
 
     public ThinkItem() {
         this(UUID.randomUUID());
@@ -54,12 +55,21 @@ public class ThinkItem extends RealmObject {
         return this;
     }
 
-    public void setDateUpdated(Date dateUpdated) {
+    public ThinkItem setDateUpdated(Date dateUpdated) {
         this.dateUpdated = dateUpdated;
+        return this;
     }
 
     public Date getDateUpdated() {
         return dateUpdated;
     }
 
+    public String getImagePaths() {
+        return imagePaths;
+    }
+
+    public ThinkItem setImagePaths(String imagePaths) {
+        this.imagePaths = imagePaths;
+        return this;
+    }
 }

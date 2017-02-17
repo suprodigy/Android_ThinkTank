@@ -24,6 +24,8 @@
     <string name="no_keyword">키워드가 없습니다.</string>
     <string name="tag_add_content_description">태그 추가</string>
     <string name="share_think">메모 전송</string>
+    <string name="cannot_take_photo">사진을 찍을 수 없습니다.</string>
+    <string name="no_permission">권한이 거부되었습니다.</string>
 
     <!-- AddKeywordDialog -->
     <string name="cannot_add_keyword">최대 3개까지 입력 가능합니다.</string>
