@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,8 +35,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// TODO (4) textView animation 적용
-// Keyword 입력하는 EditText에 AutoCompleteTextView 적용하기
+// TODO (2) textView animation 적용
 
 public class TTMainActivity extends MyActivity {
 
@@ -47,33 +47,17 @@ public class TTMainActivity extends MyActivity {
     GridLayout mLayoutShowKeyword;
     @BindView(R.id.layout_progress_bar)
     View mLayoutProgressBar;
-    @BindView(R.id.keyword_input)
+    @BindView(R.id.input_keyword_edittext)
     AutoCompleteTextView mKeywordInputEditText;
 
-    ForEffectTask mForEffectTask;
-
-    List<TextView> mTextViews = new ArrayList<>();
+    private ForEffectTask mForEffectTask;
+    private List<TextView> mTextViews = new ArrayList<>();
+    private boolean mTitleIsShown;
 
     @OnClick(R.id.add_think_button)
     public void onAddButtonClicked() {
         Intent intent = new Intent(this, TTDetailActivity.class);
         startActivity(intent);
-    }
-
-    @OnClick(R.id.keyword_search_button)
-    public void onSearchButtonClicked() {
-
-        if (mKeywordInputEditText.getText().length() == 0) {
-            Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
-        } else {
-            String keywordName = mKeywordInputEditText.getText().toString();
-            View view = this.getCurrentFocus();
-            if (view != null) {
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-            setLayoutShowKeyword(keywordName);
-        }
     }
 
     @Override
@@ -82,6 +66,7 @@ public class TTMainActivity extends MyActivity {
         setContentView(R.layout.activity_tt_main);
         ButterKnife.bind(this);
 
+        mTitleIsShown = true;
         setSupportActionBar(mToolbar);
 
         // 제목 없애기
@@ -96,8 +81,19 @@ public class TTMainActivity extends MyActivity {
 
         isStoragePermissionGranted();
 
-        KeywordUtil.addAutoCompleteOnTextView(this, mKeywordInputEditText);
+        setMainAutoComplete();
+    }
 
+    private void setMainAutoComplete() {
+        List<String> items = KeywordObserver.get().getAllKeywordNames();
+        items.add("모든 메모");
+        items.add("모든 키워드");
+
+        mKeywordInputEditText.setAdapter(new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                items
+        ));
     }
 
     private void initLayoutShowKeyword() {
@@ -164,8 +160,30 @@ public class TTMainActivity extends MyActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.action_search) {
+
+            if (mTitleIsShown) {
+
+                hideTitle();
+                mTitleIsShown = false;
+                mKeywordInputEditText.requestFocus();
+
+            } else {
+
+                if (mKeywordInputEditText.getText().length() == 0) {
+                    Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+                } else {
+                    String keywordName = mKeywordInputEditText.getText().toString();
+                    View view = this.getCurrentFocus();
+                    if (view != null) {
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    }
+                    setLayoutShowKeyword(keywordName);
+                }
+
+            }
+
         } else if (id == R.id.generate_data) {
             new TestTask().execute();
             return true;
@@ -191,6 +209,16 @@ public class TTMainActivity extends MyActivity {
             MyLog.print("Permission is granted");
             return true;
         }
+    }
+
+    public void showTitle() {
+        mKeywordInputEditText.setVisibility(View.INVISIBLE);
+        mTitle.setVisibility(View.VISIBLE);
+    }
+
+    public void hideTitle() {
+        mTitle.setVisibility(View.INVISIBLE);
+        mKeywordInputEditText.setVisibility(View.VISIBLE);
     }
 
     // text data 생성 후 mLayoutShowKeyword set
@@ -232,6 +260,7 @@ public class TTMainActivity extends MyActivity {
 
     private class ForEffectTask extends AsyncTask<String, Integer, Void> {
 
+        List<Integer> mNumbers;
         List<Pair<String, Integer>> mKeywordList;
         Pair<Integer, Integer> mMinMaxCount;
         Boolean mIsCancelled = false;
@@ -241,6 +270,7 @@ public class TTMainActivity extends MyActivity {
             for(TextView textView : mTextViews) {
                 textView.setText("");
             }
+            mNumbers = KeywordUtil.getRandomNumbers();
         }
 
         @Override
@@ -279,10 +309,12 @@ public class TTMainActivity extends MyActivity {
         protected void onProgressUpdate(Integer... values) {
             if (!mIsCancelled) {
                 int i = values[0];
-                TextView textView = mTextViews.get(KeywordUtil.getOrderFromCount(i));
+                int idx = mNumbers.get(i);
+                TextView textView = mTextViews.get(KeywordUtil.getOrderFromCount(idx));
                 textView.setText("#" + mKeywordList.get(i).first);
                 float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
                 textView.setTextSize(textSize);
+
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

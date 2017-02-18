@@ -189,7 +189,6 @@ public class TTListActivity extends MyActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_list, menu);
-
         return true;
     }
 
@@ -202,6 +201,7 @@ public class TTListActivity extends MyActivity {
                 showInputKeywordEditText();
             } else if (mInputKeywordEditText.getText().length() != 0) {
                 String keyword = mInputKeywordEditText.getText().toString();
+                keyword = KeywordUtil.removeTag(keyword);
                 showInputKeywordTextView(keyword);
             }
             return true;
@@ -217,7 +217,7 @@ public class TTListActivity extends MyActivity {
     }
 
     private void showInputKeywordTextView(String keyword) {
-        mInputKeywordTextView.setText(keyword);
+        setToolbar(keyword);
         mAdapter.updateData(ThinkObserver.get().selectThatHasKeyword(keyword));
         mInputKeywordTextView.setVisibility(View.VISIBLE);
         mInputKeywordEditText.setVisibility(View.INVISIBLE);

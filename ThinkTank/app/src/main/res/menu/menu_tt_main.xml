@@ -4,15 +4,27 @@
       tools:context="com.example.android.thinktank.TTMainActivity">
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        android:icon="@drawable/ic_app_settting"
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_keyword_search"
+        android:orderInCategory="0"
+        android:title="@string/search_keyword"
         app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/generate_data"
+        android:id="@+id/action_all_keyword"
+        android:orderInCategory="100"
+        android:title="@string/all_keyword"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_all_think"
         android:orderInCategory="101"
+        android:title="@string/all_think"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/generate_data"
+        android:orderInCategory="102"
         android:title="@string/generate_data"
         app:showAsAction="never"/>
 

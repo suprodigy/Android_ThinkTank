@@ -8,6 +8,7 @@ import android.widget.AutoCompleteTextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -179,6 +180,28 @@ public class KeywordUtil {
                 android.R.layout.simple_dropdown_item_1line,
                 items
         ));
+    }
+
+    public static List<Integer> getRandomNumbers() {
+
+        List<Integer> ret = new ArrayList<>();
+        boolean[] checked = new boolean[25];
+
+        int cnt = 1;
+        ret.add(0);
+        checked[0] = true;
+
+        while(cnt < 25) {
+            int num = (int)(Math.random()*25);
+            if (!checked[num]) {
+                ret.add(num);
+                cnt++;
+                checked[num] = true;
+            }
+        }
+
+        return ret;
+
     }
 
 }

@@ -57,9 +57,7 @@ import me.drakeet.materialdialog.MaterialDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 // TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
-// DONE (2) 사진 추가, 공유 기능 추가 - db 연동X
-// DONE (3) 사진 DB 연동 - 삭제 시 사진도 없어지게...
-// TODO (5) keyword 추가/삭제 UX 수정 - Click/LongClick effect
+// TODO (3) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
 /**
  *

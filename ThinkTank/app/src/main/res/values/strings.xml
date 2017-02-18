@@ -5,10 +5,12 @@
 
     <!-- TTMainActivity -->
     <string name="keyword_input_hint">키워드를 입력하세요.</string>
-    <string name="search_content_description">키워드 검색</string>
+    <string name="search_keyword">키워드 검색</string>
     <string name="explain_get_keyword_automatically">키워드를 자동 추출합니다.</string>
     <string name="after_get_keyword">추출된 키워드는 %1$s!</string>
     <string name="generate_data">테스트 데이터 생성</string>
+    <string name="all_keyword">모든 키워드</string>
+    <string name="all_think">모든 메모</string>
 
     <!-- TTListActivity -->
     <string name="korean_lorem_ipsum">모든 지식의 연장은 의식적인 행동을 무의식으로 바꾸는 것에서 생겨난다.\n알겠지만, 상상력에는 시간 허비가 필요하다. 길고, 비효율적이며 즐거운 게으름, 꾸물거림, 어정거림.</string>
