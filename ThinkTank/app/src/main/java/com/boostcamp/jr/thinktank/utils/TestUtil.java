@@ -54,7 +54,7 @@ public class TestUtil {
     }
 
     public static void checkKeyword() {
-        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAll();
+        OrderedRealmCollection<KeywordItem> list = KeywordObserver.get().selectAllOrderById();
 
         for(KeywordItem item : list) {
             MyLog.print(item.getId() + ". " + item.getName() + " : " + "count = " + item.getCount() +

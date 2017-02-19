@@ -2,6 +2,7 @@ package com.boostcamp.jr.thinktank.image;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -31,6 +32,8 @@ public class ImageFragment extends Fragment {
 
     private File mFile;
 
+    private Handler mHandler;
+
     public static ImageFragment create(int position) {
         ImageFragment fragment = new ImageFragment();
         Bundle args = new Bundle();
@@ -44,6 +47,7 @@ public class ImageFragment extends Fragment {
         super.onCreate(savedInstanceState);
         int position = getArguments().getInt(ARGS_IMAGE_POSITION);
         mFile = ImageRepository.get().getFiles().get(position);
+        mHandler = new Handler();
     }
 
     @Nullable
@@ -64,15 +68,30 @@ public class ImageFragment extends Fragment {
         return rootView;
     }
 
-    private void updateImageView(int destWidth, int destHeight) {
-        if (mFile == null || !mFile.exists()) {
-            mImageView.setImageDrawable(null);
-        } else {
-            Bitmap bitmap = PhotoUtil.getScaledBitmap(
-                    mFile.getPath(), destWidth, destHeight
-            );
-            mImageView.setImageBitmap(bitmap);
-        }
+    private void updateImageView(final int destWidth, final int destHeight) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (mFile == null || !mFile.exists()) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mImageView.setImageDrawable(null);
+                        }
+                    });
+                } else {
+                    final Bitmap bitmap = PhotoUtil.getScaledBitmap(
+                            mFile.getPath(), destWidth, destHeight
+                    );
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mImageView.setImageBitmap(bitmap);
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
 }

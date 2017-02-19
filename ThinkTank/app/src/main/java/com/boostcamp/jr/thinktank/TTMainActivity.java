@@ -8,24 +8,33 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Pair;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.boostcamp.jr.thinktank.manager.KeywordManager;
+import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.TestUtil;
+
+import org.lucasr.dspec.DesignSpec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +42,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.realm.OrderedRealmCollection;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-// TODO (2) textView animation 적용
-
 public class TTMainActivity extends MyActivity {
+
+    public static long backKeyTime = 0;
 
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
@@ -45,11 +55,18 @@ public class TTMainActivity extends MyActivity {
     TextView mTitle;
     @BindView(R.id.layout_show_keyword)
     GridLayout mLayoutShowKeyword;
+    @BindView(R.id.layout_cardview)
+    CardView mLayoutCardView;
     @BindView(R.id.layout_progress_bar)
     View mLayoutProgressBar;
+    @BindView(R.id.layout_for_all_keyword)
+    FrameLayout mLayoutForAllKeyword;
     @BindView(R.id.input_keyword_edittext)
     AutoCompleteTextView mKeywordInputEditText;
+    @BindView(R.id.all_keyword_recycler_view)
+    RecyclerView mAllKeywordRecyclerView;
 
+    private Menu mMenu;
     private ForEffectTask mForEffectTask;
     private List<TextView> mTextViews = new ArrayList<>();
     private boolean mTitleIsShown;
@@ -82,12 +99,15 @@ public class TTMainActivity extends MyActivity {
         isStoragePermissionGranted();
 
         setMainAutoComplete();
+
+        DesignSpec background = DesignSpec.fromResource(mLayoutCardView, R.raw.background);
+        mLayoutCardView.setBackground(background);
     }
 
     private void setMainAutoComplete() {
         List<String> items = KeywordObserver.get().getAllKeywordNames();
-        items.add("모든 메모");
-        items.add("모든 키워드");
+        items.add(getString(R.string.all_think));
+        items.add(getString(R.string.all_keyword));
 
         mKeywordInputEditText.setAdapter(new ArrayAdapter<String>(
                 this,
@@ -113,7 +133,6 @@ public class TTMainActivity extends MyActivity {
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams(
                         GridLayout.spec(GridLayout.UNDEFINED, 1f), GridLayout.spec(GridLayout.UNDEFINED, 1f));
                 textView.setLayoutParams(params);
-                textView.setTextColor(getResources().getColor(R.color.blue));
                 textView.setGravity(Gravity.CENTER);
                 CalligraphyUtils.applyFontToTextView(this, textView, "fonts/NanumPen.ttf");
                 mLayoutShowKeyword.addView(textView);
@@ -149,10 +168,23 @@ public class TTMainActivity extends MyActivity {
         }
     }
 
+    private void showSoftInput() {
+        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                .toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+    }
+
+    private void hideSoftInput() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_main, menu);
-
+        mMenu = menu;
         return true;
     }
 
@@ -167,22 +199,38 @@ public class TTMainActivity extends MyActivity {
                 hideTitle();
                 mTitleIsShown = false;
                 mKeywordInputEditText.requestFocus();
+                showSoftInput();
 
             } else {
+                String keywordName = mKeywordInputEditText.getText().toString();
 
-                if (mKeywordInputEditText.getText().length() == 0) {
+                if (keywordName.length() == 0) {
                     Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+                } else if (keywordName.equals(getString(R.string.all_keyword))) {
+                    MenuItem menuItem = mMenu.findItem(R.id.action_all_keyword);
+                    onOptionsItemSelected(menuItem);
+                } else if (keywordName.equals(getString(R.string.all_think))) {
+                    MenuItem menuItem = mMenu.findItem(R.id.action_all_think);
+                    onOptionsItemSelected(menuItem);
                 } else {
-                    String keywordName = mKeywordInputEditText.getText().toString();
-                    View view = this.getCurrentFocus();
-                    if (view != null) {
-                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                    }
+                    hideSoftInput();
                     setLayoutShowKeyword(keywordName);
+                    mKeywordInputEditText.setText("#" + keywordName);
                 }
 
             }
+
+        } else if (id == R.id.action_all_keyword) {
+
+            new ShowAllKeywordTask().execute();
+            hideSoftInput();
+
+        } else if (id == R.id.action_all_think) {
+
+            hideSoftInput();
+            Intent intent = TTListActivity
+                    .newIntent(getApplicationContext(), getString(R.string.all_think));
+            startActivity(intent);
 
         } else if (id == R.id.generate_data) {
             new TestTask().execute();
@@ -211,9 +259,22 @@ public class TTMainActivity extends MyActivity {
         }
     }
 
-    public void showTitle() {
-        mKeywordInputEditText.setVisibility(View.INVISIBLE);
-        mTitle.setVisibility(View.VISIBLE);
+    private void showProgressBar() {
+        mLayoutCardView.setVisibility(View.INVISIBLE);
+        mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void showResult() {
+        mLayoutProgressBar.setVisibility(View.INVISIBLE);
+        mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutCardView.setVisibility(View.VISIBLE);
+    }
+
+    private void showRecyclerView() {
+        mLayoutProgressBar.setVisibility(View.INVISIBLE);
+        mLayoutCardView.setVisibility(View.INVISIBLE);
+        mLayoutForAllKeyword.setVisibility(View.VISIBLE);
     }
 
     public void hideTitle() {
@@ -246,16 +307,6 @@ public class TTMainActivity extends MyActivity {
             setLayoutShowKeyword(startKeyword);
         }
 
-        private void showProgressBar() {
-            mLayoutShowKeyword.setVisibility(View.INVISIBLE);
-            mLayoutProgressBar.setVisibility(View.VISIBLE);
-        }
-
-        private void showResult() {
-            mLayoutProgressBar.setVisibility(View.INVISIBLE);
-            mLayoutShowKeyword.setVisibility(View.VISIBLE);
-        }
-
     }
 
     private class ForEffectTask extends AsyncTask<String, Integer, Void> {
@@ -267,6 +318,7 @@ public class TTMainActivity extends MyActivity {
 
         @Override
         protected void onPreExecute() {
+            showResult();
             for(TextView textView : mTextViews) {
                 textView.setText("");
             }
@@ -315,6 +367,18 @@ public class TTMainActivity extends MyActivity {
                 float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
                 textView.setTextSize(textSize);
 
+                if (i == 0) {
+                    textView.setTextColor(getColor(R.color.red));
+                } else {
+                    if (textSize > 25 && textSize <= 30) {
+                        textView.setTextColor(getColor(R.color.blue1));
+                    } else if (textSize >= 20 && textSize <= 25) {
+                        textView.setTextColor(getColor(R.color.blue2));
+                    } else {
+                        textView.setTextColor(getColor(R.color.blue3));
+                    }
+                }
+
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -331,6 +395,120 @@ public class TTMainActivity extends MyActivity {
 
         public void setIsCancelled(boolean flag) {
             mIsCancelled = flag;
+        }
+
+    }
+
+    private class ShowAllKeywordTask extends AsyncTask<Void, Void, List<String>> {
+
+        private KeywordAdapter mKeywordAdapter;
+
+        @Override
+        protected void onPreExecute() {
+            showProgressBar();
+        }
+
+        @Override
+        protected List<String> doInBackground(Void... params) {
+            List<String> ret = new ArrayList<>();
+
+            OrderedRealmCollection<KeywordItem> keywordList = KeywordObserver.get().selectAllOrderByName();
+
+            for (KeywordItem keyword : keywordList) {
+                ret.add(keyword.getName());
+            }
+
+            return ret;
+        }
+
+        @Override
+        protected void onPostExecute(List<String> keywords) {
+            showRecyclerView();
+            mAllKeywordRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+            mKeywordAdapter = new KeywordAdapter(getApplicationContext(), keywords);
+            mAllKeywordRecyclerView.setAdapter(mKeywordAdapter);
+            mAllKeywordRecyclerView.setHasFixedSize(true);
+        }
+    }
+
+    public class KeywordHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
+
+        @BindView(android.R.id.text1)
+        TextView mTextView;
+
+        public KeywordHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+
+        public void bindKeyword(String keywordName) {
+            mTextView.setText("#" + keywordName);
+            mTextView.setGravity(Gravity.CENTER);
+            mTextView.setTextSize(26);
+            mTextView.setTextColor(getColor(R.color.blue));
+            mTextView.setOnClickListener(this);
+
+            CalligraphyUtils.applyFontToTextView(getApplicationContext()
+                    , mTextView, "fonts/NanumPen.ttf");
+        }
+
+        @Override
+        public void onClick(View v) {
+            String keywordName = KeywordUtil.removeTag(mTextView.getText().toString());
+            Intent intent = TTListActivity.newIntent(getApplicationContext(), keywordName);
+            startActivity(intent);
+        }
+
+    }
+
+    private class KeywordAdapter extends RecyclerView.Adapter<KeywordHolder> {
+
+        Context mContext;
+
+        List<String> mKeywords;
+
+        public KeywordAdapter(Context context, List<String> keywords) {
+            mContext = context;
+            mKeywords = keywords;
+        }
+
+        @Override
+        public KeywordHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(mContext)
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+            return new KeywordHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(KeywordHolder holder, int position) {
+            String keywordName = mKeywords.get(position);
+            holder.bindKeyword(keywordName);
+        }
+
+        @Override
+        public int getItemCount() {
+            return (mKeywords == null) ? 0 : mKeywords.size();
+        }
+
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        Toast toast;
+
+        if (System.currentTimeMillis() > backKeyTime + 2000) {
+            backKeyTime = System.currentTimeMillis();
+            toast = Toast.makeText(this, "\'뒤로\' 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
+            toast.show();
+            return;
+        }
+
+        if (System.currentTimeMillis() <= backKeyTime + 2000) {
+            moveTaskToBack(true);
+            finish();
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
 
     }

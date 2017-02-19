@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.DividerItemDecoration;
@@ -22,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -51,13 +53,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnLongClick;
 import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
-
-// TODO (1) 키워드 추출 기능 추가 (Retrofit 이용) - pass
-// TODO (3) keyword 추가/삭제 UX 수정 - Click/LongClick effect
 
 /**
  *
@@ -91,6 +89,8 @@ public class TTDetailActivity extends MyActivity {
     private List<File> mImageFiles = new ArrayList<>();
     private ImageAdapter mImageAdapter;
 
+    private Handler mHandler;
+
     // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
 
@@ -120,14 +120,45 @@ public class TTDetailActivity extends MyActivity {
     @BindView(R.id.delete_button)
     FloatingActionButton mDeleteButton;
 
-
     @OnClick(R.id.think_keyword)
-    void onKeywordViewClicked() {
+    void onThinkKeywordClicked() {
+        View v = getLayoutInflater().inflate(R.layout.dialog_update_keyword, null);
+
+        Button addButton = (Button) v.findViewById(R.id.add_keyword);
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.dismiss();
+                onAddDialogClicked();
+            }
+        });
+
+        Button deleteButton = (Button) v.findViewById(R.id.delete_keyword);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.dismiss();
+                onDeleteDialogClicked();
+            }
+        });
+
+        mDialog = new MaterialDialog(this)
+                .setView(v)
+                .setCanceledOnTouchOutside(true);
+
+        mDialog.show();
+    }
+
+    void onAddDialogClicked() {
         if (mKeywordStrings.size() == 3) {
             Toast.makeText(this, R.string.cannot_add_keyword, Toast.LENGTH_SHORT).show();
         } else {
             showAddTagDialog();
         }
+    }
+
+    void onDeleteDialogClicked() {
+        showDeleteKeywordDialog();
     }
 
     /**
@@ -139,6 +170,40 @@ public class TTDetailActivity extends MyActivity {
         View v = getLayoutInflater().inflate(R.layout.dialog_add_keyword, null);
 
         final EditText keywordEditText = (EditText) v.findViewById(R.id.keyword_edit_text);
+        final LinearLayout layoutForMostUsedKeyword =
+                (LinearLayout) v.findViewById(R.id.layout_for_most_used_keyword);
+
+        List<String> mostUsedKeyword = KeywordObserver.get().getMostUsedKeyword();
+
+        if (mostUsedKeyword.size() != 0) {
+            TextView textView = new TextView(this);
+            textView.setText(getString(R.string.most_used_keyword));
+            textView.setPadding(8, 40, 8, 0);
+            textView.setTextSize(18);
+
+            layoutForMostUsedKeyword.addView(textView);
+        }
+
+        for (String keywordName : mostUsedKeyword) {
+            TextView textView = new TextView(this);
+            textView.setText("#" + keywordName);
+            textView.setPadding(8, 32, 8, 0);
+            textView.setTextSize(26);
+            textView.setTextColor(getResources().getColorStateList(R.color.keyword_textview_color));
+
+            CalligraphyUtils.applyFontToTextView(getApplicationContext()
+                    , textView, "fonts/NanumPen.ttf");
+
+            textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String keywordName = KeywordUtil.removeTag(((TextView)v).getText().toString());
+                    keywordEditText.setText(keywordName);
+                }
+            });
+
+            layoutForMostUsedKeyword.addView(textView);
+        }
 
         mDialog = new MaterialDialog(this)
                 .setView(v)
@@ -208,12 +273,6 @@ public class TTDetailActivity extends MyActivity {
         ThinkObserver.get().delete(this, mThinkItem);
         mDeleted = true;
         finish();
-    }
-
-    @OnLongClick(R.id.think_keyword)
-    boolean onKeywordViewLongClicked() {
-        showDeleteKeywordDialog();
-        return true;
     }
 
     private void showDeleteKeywordDialog() {
@@ -308,6 +367,8 @@ public class TTDetailActivity extends MyActivity {
         DesignSpec background = DesignSpec.fromResource(mLayout, R.raw.background);
         mLayout.setBackground(background);
 
+        mHandler = new Handler();
+
         init();
         setEventListener();
     }
@@ -364,21 +425,31 @@ public class TTDetailActivity extends MyActivity {
             }
 
             @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 File photoFile = mImageFiles.get(position);
-                removeFile(photoFile);
+                removeFile(photoFile, position);
             }
         }).attachToRecyclerView(mLayoutForImage);
     }
 
-    private void removeFile(File photoFile) {
-        if (PhotoUtil.isMyImage(getApplicationContext(), photoFile)) {
-            photoFile.delete();
-        }
-        mImageFiles.remove(photoFile);
-        mImageAdapter.swapFiles(mImageFiles);
-        mImageAdapter.notifyDataSetChanged();
+    private void removeFile(final File photoFile, final int position) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (PhotoUtil.isMyImage(getApplicationContext(), photoFile)) {
+                    photoFile.delete();
+                }
+                mImageFiles.remove(photoFile);
+
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mImageAdapter.swapFiles(mImageFiles, position);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void initImageButton() {
@@ -668,20 +739,27 @@ public class TTDetailActivity extends MyActivity {
                     updatePhotoView(mPhotoImageView.getWidth(), mPhotoImageView.getHeight());
                 }
             });
-
-            Bitmap bitmap = PhotoUtil.getScaledBitmap(photoFile.getPath(),
-                    mPhotoImageView.getWidth(),
-                    mPhotoImageView.getHeight());
-
-            mPhotoImageView.setImageBitmap(bitmap);
         }
 
-        private void updatePhotoView(int destWidth, int destHeight) {
+        private void updatePhotoView(final int destWidth, final int destHeight) {
             if (mFile == null || !mFile.exists()) {
-                removeFile(mFile);
+                removeFile(mFile, getAdapterPosition());
             } else {
-                Bitmap bitmap = PhotoUtil.getScaledBitmap(mFile.getPath(), destWidth, destHeight);
-                mPhotoImageView.setImageBitmap(bitmap);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final Bitmap bitmap = PhotoUtil.getScaledBitmap(
+                                mFile.getPath(), destWidth, destHeight
+                        );
+
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPhotoImageView.setImageBitmap(bitmap);
+                            }
+                        });
+                    }
+                }).start();
             }
         }
 
@@ -722,6 +800,11 @@ public class TTDetailActivity extends MyActivity {
         public void swapFiles(List<File> newFiles) {
             mFiles = newFiles;
             notifyDataSetChanged();
+        }
+
+        public void swapFiles(List<File> newFiles, int position) {
+            mFiles = newFiles;
+            notifyItemRemoved(position);
         }
 
     }

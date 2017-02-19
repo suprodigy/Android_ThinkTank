@@ -73,9 +73,32 @@ public class KeywordObserver {
         return realm.where(KeywordItem.class).equalTo("name", name).findFirst();
     }
 
-    public OrderedRealmCollection<KeywordItem> selectAll() {
+    public OrderedRealmCollection<KeywordItem> selectAllOrderById() {
         Realm realm = Realm.getDefaultInstance();
         return realm.where(KeywordItem.class).findAllSorted("id");
+    }
+
+    public OrderedRealmCollection<KeywordItem> selectAllOrderByName() {
+        Realm realm = Realm.getDefaultInstance();
+        return realm.where(KeywordItem.class).findAllSorted("name");
+    }
+
+    public List<String> getMostUsedKeyword() {
+        List<String> ret = new ArrayList<>();
+
+        Realm realm = Realm.getDefaultInstance();
+
+        OrderedRealmCollection<KeywordItem> keywordItems
+                = realm.where(KeywordItem.class).findAllSorted("count", Sort.DESCENDING);
+
+        int i = 0;
+        for (KeywordItem keywordItem : keywordItems) {
+            if (i >= 5) break;
+            ret.add(keywordItem.getName());
+            i++;
+        }
+
+        return ret;
     }
 
     public KeywordItem getCopiedObject(KeywordItem src) {
@@ -103,7 +126,7 @@ public class KeywordObserver {
 
         Realm realm = Realm.getDefaultInstance();
 
-        OrderedRealmCollection<KeywordItem> keywordItems = selectAll();
+        OrderedRealmCollection<KeywordItem> keywordItems = selectAllOrderById();
 
         for (KeywordItem item : keywordItems) {
             ret.add(item.getName());

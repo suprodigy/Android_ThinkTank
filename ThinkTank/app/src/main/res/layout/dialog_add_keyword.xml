@@ -51,12 +51,14 @@
 
         </com.github.florent37.materialtextfield.MaterialTextField>
 
-        <FrameLayout
+        <LinearLayout
+            android:id="@+id/layout_for_most_used_keyword"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="@dimen/margin_between_items">
 
-        </FrameLayout>
+        </LinearLayout>
 
     </LinearLayout>
 

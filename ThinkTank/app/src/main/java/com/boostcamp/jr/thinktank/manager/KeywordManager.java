@@ -42,7 +42,7 @@ public class KeywordManager {
     }
 
     private void init() {
-        OrderedRealmCollection<KeywordItem> results = KeywordObserver.get().selectAll();
+        OrderedRealmCollection<KeywordItem> results = KeywordObserver.get().selectAllOrderById();
         mCount = results.size();
 
         for(KeywordItem keyword :  results) {

@@ -34,7 +34,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/no_keyword"
-                android:textColor="@drawable/keyword_textview_color"
+                android:textColor="@color/keyword_textview_color"
                 android:textSize="30sp"
                 fontPath="fonts/NanumPen.ttf"/>
 

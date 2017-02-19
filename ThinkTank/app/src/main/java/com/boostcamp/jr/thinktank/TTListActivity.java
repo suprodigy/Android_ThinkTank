@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
@@ -89,7 +90,13 @@ public class TTListActivity extends MyActivity {
 
     private void setRecyclerView(String keyword) {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new TTAdapter(this, ThinkObserver.get().selectThatHasKeyword(keyword));
+
+        ThinkObserver thinkObserver = ThinkObserver.get();
+        if (keyword.equals(getString(R.string.all_think))) {
+            mAdapter = new TTAdapter(this, thinkObserver.selectAll());
+        } else {
+            mAdapter = new TTAdapter(this, thinkObserver.selectThatHasKeyword(keyword));
+        }
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.requestFocus();
@@ -120,13 +127,10 @@ public class TTListActivity extends MyActivity {
 
         @BindView(R.id.list_item_keywords)
         TextView mKeywords;
-
         @BindView(R.id.list_item_content)
         TextView mContent;
-
         @BindView(R.id.list_item_date)
         TextView mDate;
-
         @BindView(R.id.list_item_background)
         View mBackground;
 
@@ -199,9 +203,12 @@ public class TTListActivity extends MyActivity {
         if (id == R.id.action_search) {
             if (!mInputKeywordEditTextIsVisible) {
                 showInputKeywordEditText();
+                mInputKeywordEditText.requestFocus();
+                showSoftInput();
             } else if (mInputKeywordEditText.getText().length() != 0) {
                 String keyword = mInputKeywordEditText.getText().toString();
                 keyword = KeywordUtil.removeTag(keyword);
+                hideSoftInput();
                 showInputKeywordTextView(keyword);
             }
             return true;
@@ -218,11 +225,31 @@ public class TTListActivity extends MyActivity {
 
     private void showInputKeywordTextView(String keyword) {
         setToolbar(keyword);
-        mAdapter.updateData(ThinkObserver.get().selectThatHasKeyword(keyword));
+
+        ThinkObserver thinkObserver = ThinkObserver.get();
+        if (keyword.equals(getString(R.string.all_think))) {
+            mAdapter.updateData(thinkObserver.selectAll());
+        } else {
+            mAdapter.updateData(ThinkObserver.get().selectThatHasKeyword(keyword));
+        }
+
         mInputKeywordTextView.setVisibility(View.VISIBLE);
         mInputKeywordEditText.setVisibility(View.INVISIBLE);
         mRecyclerView.requestFocus();
         mInputKeywordEditTextIsVisible = false;
+    }
+
+    private void showSoftInput() {
+        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                .toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+    }
+
+    private void hideSoftInput() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
 }
