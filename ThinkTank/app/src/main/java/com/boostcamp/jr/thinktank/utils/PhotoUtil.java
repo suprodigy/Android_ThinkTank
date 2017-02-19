@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.ExifInterface;
 import android.os.Environment;
 
@@ -90,6 +91,15 @@ public class PhotoUtil {
         return photoFile.getPath()
                 .equals(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
                         + "/" + photoFile.getName());
+    }
+
+    public static BitmapDrawable getResizedBitmapDrawable(Context context, int id) {
+        BitmapDrawable image = new BitmapDrawable(context.getResources(),
+                BitmapFactory.decodeResource(context.getResources(), id));
+
+        Bitmap b = ((BitmapDrawable)image).getBitmap();
+        Bitmap bitmapResized = Bitmap.createScaledBitmap(b, 50, 50, false);
+        return new BitmapDrawable(context.getResources(), bitmapResized);
     }
 
 }

@@ -19,6 +19,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +42,10 @@ import com.boostcamp.jr.thinktank.model.ThinkObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
-import com.github.clans.fab.FloatingActionButton;
+import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
+import com.yalantis.contextmenu.lib.MenuObject;
+import com.yalantis.contextmenu.lib.MenuParams;
+import com.yalantis.contextmenu.lib.interfaces.OnMenuItemClickListener;
 
 import org.lucasr.dspec.DesignSpec;
 
@@ -65,7 +69,8 @@ import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
  *
  */
 
-public class TTDetailActivity extends MyActivity {
+public class TTDetailActivity extends MyActivity
+        implements OnMenuItemClickListener {
 
     // TTListActivity가 newIntent 메소드를 통해 TTDetailActivity를 부르는 Intent를 얻음
     // EXTRA_POSITION은 Intent Extra의 Key 값
@@ -84,12 +89,15 @@ public class TTDetailActivity extends MyActivity {
     private ThinkItem mThinkItem;
     private boolean mDeleted;
     private boolean mIsAdded;
+    private boolean mCanTakePhoto;
     private List<Pair<String, Boolean>> mKeywordStrings = new ArrayList<>();
     private File mTemporaryFile;
     private List<File> mImageFiles = new ArrayList<>();
     private ImageAdapter mImageAdapter;
 
     private Handler mHandler;
+
+    private ContextMenuDialogFragment mMenuDialogFragment;
 
     // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
@@ -110,15 +118,6 @@ public class TTDetailActivity extends MyActivity {
 
     @BindView(R.id.think_content)
     EditText mContentEditText;
-
-    @BindView(R.id.take_photo_button)
-    FloatingActionButton mTakePhotoButton;
-
-    @BindView(R.id.share_button)
-    FloatingActionButton mShareButton;
-
-    @BindView(R.id.delete_button)
-    FloatingActionButton mDeleteButton;
 
     @OnClick(R.id.think_keyword)
     void onThinkKeywordClicked() {
@@ -228,53 +227,6 @@ public class TTDetailActivity extends MyActivity {
         mDialog.show();
     }
 
-    @OnClick(R.id.extract_keyword)
-    void onExtractButtonClicked() {
-//        if (mThinkItem.getContent().length() != 0) {
-//            new GetKeywordTask().execute("TEst");
-//        }
-    }
-
-    @OnClick(R.id.take_photo_button)
-    void onTakePhotoButtonClicked() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        String fileName = mThinkItem.getId() + "_" + mImageFiles.size() + ".jpg";
-        mTemporaryFile = PhotoUtil.getPhotoFile(this, fileName);
-
-        if (mTemporaryFile == null) {
-            Toast.makeText(this, getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Uri uri = Uri.fromFile(mTemporaryFile);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        startActivityForResult(intent, REQUEST_PHOTO);
-    }
-
-    @OnClick(R.id.get_image_from_gallery)
-    void onImageButtonClicked() {
-        Intent i = new Intent(Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(i, REQUEST_LOAD_IMAGE);
-    }
-
-    @OnClick(R.id.share_button)
-    void onShareButtonClicked() {
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.setType("text/plain");
-        i.putExtra(Intent.EXTRA_TEXT, mThinkItem.getContent());
-        i.putExtra(Intent.EXTRA_SUBJECT, mKeywordTextView.getText().toString());
-        i = Intent.createChooser(i, getString(R.string.share_think));
-        startActivity(i);
-    }
-
-    @OnClick(R.id.delete_button)
-    void onDeleteButtonClicked() {
-        ThinkObserver.get().delete(this, mThinkItem);
-        mDeleted = true;
-        finish();
-    }
-
     private void showDeleteKeywordDialog() {
         View v = getLayoutInflater().inflate(R.layout.dialog_delete_keyword, null);
 
@@ -371,6 +323,8 @@ public class TTDetailActivity extends MyActivity {
 
         init();
         setEventListener();
+
+        setMenuItems();
     }
 
     private void init() {
@@ -455,15 +409,12 @@ public class TTDetailActivity extends MyActivity {
     private void initImageButton() {
         final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         PackageManager packageManager = getPackageManager();
-        boolean canTakePhoto = captureImage.resolveActivity(packageManager) != null;
-        mTakePhotoButton.setEnabled(canTakePhoto);
+        mCanTakePhoto = captureImage.resolveActivity(packageManager) != null;
     }
 
     private void setIfItemNotAdded() {
         mIsAdded = false;
         mThinkItem = new ThinkItem();
-        mShareButton.setEnabled(false);
-        mDeleteButton.setEnabled(false);
     }
 
     private void setIfItemAdded(String id) {
@@ -608,8 +559,18 @@ public class TTDetailActivity extends MyActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_tt_detail, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
+        int id = item.getItemId();
+        if (id == R.id.action_menu) {
+            mMenuDialogFragment.show(getSupportFragmentManager(), "ContextMenuDialogFragment");
+            return true;
+        } else if (id == android.R.id.home) {
             onBackPressed();
             return true;
         }
@@ -645,6 +606,70 @@ public class TTDetailActivity extends MyActivity {
         }
 
         mKeywordTextView.setText(keywordString);
+    }
+
+    @Override
+    public void onMenuItemClick(View clickedView, int position) {
+
+        mMenuDialogFragment.dismiss();
+
+        switch (position) {
+            case 0:
+                break;
+            case 1:
+                if (mCanTakePhoto) {
+                    onTakePhotoButtonClicked();
+                } else {
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case 2:
+                onImageButtonClicked();
+                break;
+            case 3:
+                onShareButtonClicked();
+                break;
+            case 4:
+                onDeleteButtonClicked();
+                break;
+        }
+    }
+
+    void onTakePhotoButtonClicked() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        String fileName = mThinkItem.getId() + "_" + mImageFiles.size() + ".jpg";
+        mTemporaryFile = PhotoUtil.getPhotoFile(this, fileName);
+
+        if (mTemporaryFile == null) {
+            Toast.makeText(this, getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Uri uri = Uri.fromFile(mTemporaryFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        startActivityForResult(intent, REQUEST_PHOTO);
+    }
+
+    void onImageButtonClicked() {
+        Intent i = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(i, REQUEST_LOAD_IMAGE);
+    }
+
+    void onShareButtonClicked() {
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TEXT, mThinkItem.getContent());
+        i.putExtra(Intent.EXTRA_SUBJECT, mKeywordTextView.getText().toString());
+        i = Intent.createChooser(i, getString(R.string.share_think));
+        startActivity(i);
+    }
+
+    void onDeleteButtonClicked() {
+        ThinkObserver.get().delete(this, mThinkItem);
+        mDeleted = true;
+        finish();
     }
 
 //    private class GetKeywordTask extends AsyncTask<String, Void, String> {
@@ -809,4 +834,47 @@ public class TTDetailActivity extends MyActivity {
 
     }
 
+    private List<MenuObject> getMenuObjects() {
+        MenuObject close = new MenuObject();
+        close.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_cancel));
+
+        MenuObject takePhoto = new MenuObject(getString(R.string.take_photo));
+        takePhoto.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_take_photo));
+
+        MenuObject getImage = new MenuObject(getString(R.string.get_image_from_gallery));
+        getImage.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_get_image));
+
+        List<MenuObject> menuObjects = new ArrayList<>();
+        menuObjects.add(close);
+        menuObjects.add(takePhoto);
+        menuObjects.add(getImage);
+
+        if (mIsAdded) {
+            MenuObject shareThink = new MenuObject(getString(R.string.share_menu));
+            shareThink.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_think_share));
+
+            MenuObject deleteThink = new MenuObject(getString(R.string.delete_menu));
+            deleteThink.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_think_delete));
+
+            menuObjects.add(shareThink);
+            menuObjects.add(deleteThink);
+        }
+
+        for (MenuObject menuObject : menuObjects) {
+            menuObject.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            menuObject.setBgColor(getResources().getColor(R.color.colorPrimary));
+            menuObject.setDividerColor(R.color.white);
+        }
+
+        return menuObjects;
+    }
+
+    private void setMenuItems() {
+        MenuParams menuParams = new MenuParams();
+        menuParams.setActionBarSize((int) getResources().getDimension(R.dimen.action_bar_size));
+        menuParams.setMenuObjects(getMenuObjects());
+        menuParams.setClosableOutside(true);
+        mMenuDialogFragment = ContextMenuDialogFragment.newInstance(menuParams);
+        mMenuDialogFragment.setItemClickListener(this);
+    }
 }

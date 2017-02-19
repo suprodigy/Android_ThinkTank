@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +19,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -55,8 +56,6 @@ public class TTMainActivity extends MyActivity {
     TextView mTitle;
     @BindView(R.id.layout_show_keyword)
     GridLayout mLayoutShowKeyword;
-    @BindView(R.id.layout_cardview)
-    CardView mLayoutCardView;
     @BindView(R.id.layout_progress_bar)
     View mLayoutProgressBar;
     @BindView(R.id.layout_for_all_keyword)
@@ -100,8 +99,11 @@ public class TTMainActivity extends MyActivity {
 
         setMainAutoComplete();
 
-        DesignSpec background = DesignSpec.fromResource(mLayoutCardView, R.raw.background);
-        mLayoutCardView.setBackground(background);
+        DesignSpec background1 = DesignSpec.fromResource(mLayoutShowKeyword, R.raw.background);
+        mLayoutShowKeyword.setBackground(background1);
+
+        DesignSpec background2 = DesignSpec.fromResource(mLayoutForAllKeyword, R.raw.background);
+        mLayoutForAllKeyword.setBackground(background2);
     }
 
     private void setMainAutoComplete() {
@@ -156,6 +158,7 @@ public class TTMainActivity extends MyActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        showTitle();
         initLayoutShowKeyword();
     }
 
@@ -203,6 +206,7 @@ public class TTMainActivity extends MyActivity {
 
             } else {
                 String keywordName = mKeywordInputEditText.getText().toString();
+                keywordName = KeywordUtil.removeTag(keywordName);
 
                 if (keywordName.length() == 0) {
                     Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
@@ -260,7 +264,7 @@ public class TTMainActivity extends MyActivity {
     }
 
     private void showProgressBar() {
-        mLayoutCardView.setVisibility(View.INVISIBLE);
+        mLayoutShowKeyword.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
         mLayoutProgressBar.setVisibility(View.VISIBLE);
     }
@@ -268,13 +272,18 @@ public class TTMainActivity extends MyActivity {
     private void showResult() {
         mLayoutProgressBar.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
-        mLayoutCardView.setVisibility(View.VISIBLE);
+        mLayoutShowKeyword.setVisibility(View.VISIBLE);
     }
 
     private void showRecyclerView() {
         mLayoutProgressBar.setVisibility(View.INVISIBLE);
-        mLayoutCardView.setVisibility(View.INVISIBLE);
+        mLayoutShowKeyword.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.VISIBLE);
+    }
+
+    public void showTitle() {
+        mKeywordInputEditText.setVisibility(View.INVISIBLE);
+        mTitle.setVisibility(View.VISIBLE);
     }
 
     public void hideTitle() {
@@ -347,7 +356,7 @@ public class TTMainActivity extends MyActivity {
                     }
 
                     publishProgress(i);
-                    Thread.sleep(100);
+                    Thread.sleep(120);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -363,7 +372,13 @@ public class TTMainActivity extends MyActivity {
                 int i = values[0];
                 int idx = mNumbers.get(i);
                 TextView textView = mTextViews.get(KeywordUtil.getOrderFromCount(idx));
+
+                final Animation in = new AlphaAnimation(0.0f, 1.0f);
+                in.setDuration(1000);
+
                 textView.setText("#" + mKeywordList.get(i).first);
+                textView.startAnimation(in);
+
                 float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
                 textView.setTextSize(textSize);
 
@@ -500,7 +515,7 @@ public class TTMainActivity extends MyActivity {
 
         if (System.currentTimeMillis() > backKeyTime + 2000) {
             backKeyTime = System.currentTimeMillis();
-            toast = Toast.makeText(this, "\'뒤로\' 한번 더 누르시면 종료됩니다.", Toast.LENGTH_SHORT);
+            toast = Toast.makeText(this, "정말로 종료합니까?", Toast.LENGTH_SHORT);
             toast.show();
             return;
         }

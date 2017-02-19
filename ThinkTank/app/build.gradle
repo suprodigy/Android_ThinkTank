@@ -33,7 +33,6 @@ dependencies {
     compile 'com.android.support:design:25.1.1'
     compile 'com.jakewharton:butterknife:8.5.1'
     compile 'io.realm:android-adapters:1.4.0'
-    compile 'com.github.clans:fab:1.6.4'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
     compile 'org.lucasr.dspec:dspec:0.1.1'
     testCompile 'junit:junit:4.12'
@@ -45,4 +44,5 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
+    compile 'com.yalantis:contextmenu:1.0.7'
 }

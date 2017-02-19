@@ -12,122 +12,71 @@
         android:id="@+id/toolbar"
         layout="@layout/toolbar_default"/>
 
-    <RelativeLayout
-        android:id="@+id/activity_tt_detail"
-        android:layout_below="@id/toolbar"
+    <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        app:cardBackgroundColor="@color/backgroundColor"
+        app:contentPadding="1dp">
 
         <RelativeLayout
+            android:id="@+id/activity_tt_detail"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:padding="@dimen/margin_content">
+            android:layout_height="match_parent">
 
-            <TextView
-                android:id="@+id/think_keyword"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/no_keyword"
-                android:textColor="@color/keyword_textview_color"
-                android:textSize="30sp"
-                fontPath="fonts/NanumPen.ttf"/>
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginRight="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:padding="@dimen/margin_content">
 
-            <ScrollView
-                android:layout_below="@id/think_keyword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:orientation="vertical"
+                <TextView
+                    android:id="@+id/think_keyword"
+                    fontPath="fonts/NanumPen.ttf"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_keyword"
+                    android:textColor="@color/keyword_textview_color"
+                    android:textSize="30sp"/>
 
-                    <android.support.v7.widget.RecyclerView
-                        android:id="@+id/layout_for_image"
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/think_keyword">
+
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                    <EditText
-                        android:id="@+id/think_content"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginTop="@dimen/activity_vertical_margin"
-                        android:background="@android:color/transparent"
-                        android:gravity="top"
-                        android:hint="@string/content_hint"
-                        android:textSize="24sp"/>
+                        <android.support.v7.widget.RecyclerView
+                            android:id="@+id/layout_for_image"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
 
-                </LinearLayout>
+                        <EditText
+                            android:id="@+id/think_content"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="@dimen/activity_vertical_margin"
+                            android:background="@android:color/transparent"
+                            android:gravity="top"
+                            android:hint="@string/content_hint"
+                            android:textSize="24sp"/>
 
-            </ScrollView>
+                    </LinearLayout>
+
+                </ScrollView>
+
+            </RelativeLayout>
 
         </RelativeLayout>
 
-        <com.github.clans.fab.FloatingActionMenu
-            android:id="@+id/menu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            app:menu_animationDelayPerItem="0"
-            app:menu_colorNormal="@color/colorPrimary"
-            app:menu_colorPressed="@color/colorPrimaryDark"
-            app:menu_colorRipple="@color/colorAccent"
-            app:menu_labels_hideAnimation="@anim/hide_to_bottom"
-            app:menu_labels_showAnimation="@anim/show_from_bottom"
-            app:menu_labels_style="@style/MenuLabelsStyle"
-            app:menu_shadowColor="@color/colorPrimaryDark">
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/extract_keyword"
-                style="@style/MenuButtonsStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_add_tag"
-                app:fab_label="@string/extract_keyword"/>
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/take_photo_button"
-                style="@style/MenuButtonsStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_take_photo"
-                app:fab_label="@string/take_photo"/>
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/get_image_from_gallery"
-                style="@style/MenuButtonsStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_add_image"
-                app:fab_label="@string/get_image_from_gallery"/>
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/share_button"
-                style="@style/MenuButtonsStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_think_share"
-                app:fab_label="@string/share_menu"/>
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/delete_button"
-                style="@style/MenuButtonsStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_delete_think"
-                app:fab_label="@string/delete_menu"/>
-
-        </com.github.clans.fab.FloatingActionMenu>
-
-    </RelativeLayout>
+    </android.support.v7.widget.CardView>
 
 </RelativeLayout>
