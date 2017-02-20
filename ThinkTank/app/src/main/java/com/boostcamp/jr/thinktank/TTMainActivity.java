@@ -304,6 +304,8 @@ public class TTMainActivity extends MyActivity
     public void showTitle() {
         mKeywordInputEditText.setVisibility(View.INVISIBLE);
         mTitle.setVisibility(View.VISIBLE);
+        mTitleIsShown = true;
+        mKeywordInputEditText.setText("");
     }
 
     public void hideTitle() {
