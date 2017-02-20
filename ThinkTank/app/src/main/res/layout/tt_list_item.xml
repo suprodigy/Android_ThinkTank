@@ -23,15 +23,34 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/list_item_keywords"
-                tools:text="#헌법 #국회의원"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/blue"
-                fontPath="fonts/NanumPen.ttf"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/ic_with_image"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:scaleType="fitXY"
+                    android:contentDescription="@string/with_image"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"/>
+
+                <TextView
+                    android:id="@+id/list_item_keywords"
+                    android:layout_toLeftOf="@id/ic_with_image"
+                    android:layout_toStartOf="@id/ic_with_image"
+                    fontPath="fonts/NanumPen.ttf"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/blue"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    tools:text="#헌법 #국회의원"/>
+
+            </RelativeLayout>
 
             <TextView
                 android:id="@+id/list_item_content"

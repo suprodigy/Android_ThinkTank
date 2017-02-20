@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -42,6 +43,7 @@ import com.boostcamp.jr.thinktank.model.ThinkObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
+import com.muddzdev.styleabletoastlibrary.StyleableToast;
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
 import com.yalantis.contextmenu.lib.MenuObject;
 import com.yalantis.contextmenu.lib.MenuParams;
@@ -121,6 +123,8 @@ public class TTDetailActivity extends MyActivity
 
     @OnClick(R.id.think_keyword)
     void onThinkKeywordClicked() {
+        hideSoftInput();
+
         View v = getLayoutInflater().inflate(R.layout.dialog_update_keyword, null);
 
         Button addButton = (Button) v.findViewById(R.id.add_keyword);
@@ -150,7 +154,8 @@ public class TTDetailActivity extends MyActivity
 
     void onAddDialogClicked() {
         if (mKeywordStrings.size() == 3) {
-            Toast.makeText(this, R.string.cannot_add_keyword, Toast.LENGTH_SHORT).show();
+            StyleableToast.makeText(this,
+                    getString(R.string.cannot_add_keyword), Toast.LENGTH_SHORT, R.style.StyledToast).show();
         } else {
             showAddTagDialog();
         }
@@ -453,8 +458,7 @@ public class TTDetailActivity extends MyActivity
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-            }
+            public void afterTextChanged(Editable s) {}
         });
 
     }
@@ -552,7 +556,8 @@ public class TTDetailActivity extends MyActivity
                     mImageFiles.add(file);
                     mImageAdapter.swapFiles(mImageFiles);
                 } else {
-                    Toast.makeText(this, getString(R.string.no_permission), Toast.LENGTH_SHORT).show();
+                    StyleableToast.makeText(this,
+                            getString(R.string.no_permission), Toast.LENGTH_SHORT, R.style.StyledToast).show();
                 }
             }
         }
@@ -620,8 +625,8 @@ public class TTDetailActivity extends MyActivity
                 if (mCanTakePhoto) {
                     onTakePhotoButtonClicked();
                 } else {
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
+                    StyleableToast.makeText(getApplicationContext(),
+                            getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT, R.style.StyledToast).show();
                 }
                 break;
             case 2:
@@ -642,7 +647,8 @@ public class TTDetailActivity extends MyActivity
         mTemporaryFile = PhotoUtil.getPhotoFile(this, fileName);
 
         if (mTemporaryFile == null) {
-            Toast.makeText(this, getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT).show();
+            StyleableToast.makeText(this,
+                    getString(R.string.cannot_take_photo), Toast.LENGTH_SHORT, R.style.StyledToast).show();
             return;
         }
 
@@ -876,5 +882,13 @@ public class TTDetailActivity extends MyActivity
         menuParams.setClosableOutside(true);
         mMenuDialogFragment = ContextMenuDialogFragment.newInstance(menuParams);
         mMenuDialogFragment.setItemClickListener(this);
+    }
+
+    private void hideSoftInput() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 }

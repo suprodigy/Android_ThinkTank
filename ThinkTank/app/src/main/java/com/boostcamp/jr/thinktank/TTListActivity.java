@@ -2,7 +2,6 @@ package com.boostcamp.jr.thinktank;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordItem;
@@ -120,6 +120,12 @@ public class TTListActivity extends MyActivity {
         }).attachToRecyclerView(mRecyclerView);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        hideSoftInput();
+    }
+
     public class TTHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
@@ -133,6 +139,8 @@ public class TTListActivity extends MyActivity {
         TextView mDate;
         @BindView(R.id.list_item_background)
         View mBackground;
+        @BindView(R.id.ic_with_image)
+        ImageView mWithImage;
 
         public TTHolder(View itemView) {
             super(itemView);
@@ -140,11 +148,7 @@ public class TTListActivity extends MyActivity {
             itemView.setOnClickListener(this);
 
             DesignSpec background = DesignSpec.fromResource(mBackground, R.raw.list_item_background);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                mBackground.getOverlay().add(background);
-            } else {
-                mBackground.setBackground(background);
-            }
+            mBackground.setBackground(background);
         }
 
         public void bindThinkItem(ThinkItem item) {
@@ -158,6 +162,13 @@ public class TTListActivity extends MyActivity {
 
             mContent.setText(mThinkItem.getContent());
             mDate.setText(DateFormat.format("MMM d EEEE, yyyy", mThinkItem.getDateUpdated()));
+
+            String path = mThinkItem.getImagePaths();
+            if (path != null && path.length() != 0) {
+                mWithImage.setImageResource(R.drawable.ic_memo_with_image);
+            } else {
+                mWithImage.setImageBitmap(null);
+            }
         }
 
         @Override

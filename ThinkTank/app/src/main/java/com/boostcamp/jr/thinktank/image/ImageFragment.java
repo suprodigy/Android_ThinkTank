@@ -1,5 +1,6 @@
 package com.boostcamp.jr.thinktank.image;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,7 +32,7 @@ public class ImageFragment extends Fragment {
     ImageView mImageView;
 
     private File mFile;
-
+    private Context mContext;
     private Handler mHandler;
 
     public static ImageFragment create(int position) {
@@ -68,7 +69,14 @@ public class ImageFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
+
     private void updateImageView(final int destWidth, final int destHeight) {
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -92,6 +100,7 @@ public class ImageFragment extends Fragment {
                 }
             }
         }).start();
+
     }
 
 }

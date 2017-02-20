@@ -12,6 +12,7 @@ import android.support.v7.widget.GridLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,10 +22,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,7 +36,13 @@ import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
+import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 import com.boostcamp.jr.thinktank.utils.TestUtil;
+import com.muddzdev.styleabletoastlibrary.StyleableToast;
+import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
+import com.yalantis.contextmenu.lib.MenuObject;
+import com.yalantis.contextmenu.lib.MenuParams;
+import com.yalantis.contextmenu.lib.interfaces.OnMenuItemClickListener;
 
 import org.lucasr.dspec.DesignSpec;
 
@@ -46,7 +55,8 @@ import butterknife.OnClick;
 import io.realm.OrderedRealmCollection;
 import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
-public class TTMainActivity extends MyActivity {
+public class TTMainActivity extends MyActivity
+        implements OnMenuItemClickListener  {
 
     public static long backKeyTime = 0;
 
@@ -65,10 +75,11 @@ public class TTMainActivity extends MyActivity {
     @BindView(R.id.all_keyword_recycler_view)
     RecyclerView mAllKeywordRecyclerView;
 
-    private Menu mMenu;
     private ForEffectTask mForEffectTask;
     private List<TextView> mTextViews = new ArrayList<>();
     private boolean mTitleIsShown;
+
+    private ContextMenuDialogFragment mMenuDialogFragment;
 
     @OnClick(R.id.add_think_button)
     public void onAddButtonClicked() {
@@ -98,6 +109,8 @@ public class TTMainActivity extends MyActivity {
         isStoragePermissionGranted();
 
         setMainAutoComplete();
+
+        setMenuItems();
 
         DesignSpec background1 = DesignSpec.fromResource(mLayoutShowKeyword, R.raw.background);
         mLayoutShowKeyword.setBackground(background1);
@@ -136,6 +149,8 @@ public class TTMainActivity extends MyActivity {
                         GridLayout.spec(GridLayout.UNDEFINED, 1f), GridLayout.spec(GridLayout.UNDEFINED, 1f));
                 textView.setLayoutParams(params);
                 textView.setGravity(Gravity.CENTER);
+                textView.setMaxLines(1);
+                textView.setEllipsize(TextUtils.TruncateAt.END);
                 CalligraphyUtils.applyFontToTextView(this, textView, "fonts/NanumPen.ttf");
                 mLayoutShowKeyword.addView(textView);
                 mTextViews.add(textView);
@@ -187,7 +202,6 @@ public class TTMainActivity extends MyActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_main, menu);
-        mMenu = menu;
         return true;
     }
 
@@ -209,13 +223,12 @@ public class TTMainActivity extends MyActivity {
                 keywordName = KeywordUtil.removeTag(keywordName);
 
                 if (keywordName.length() == 0) {
-                    Toast.makeText(this, getString(R.string.no_keyword), Toast.LENGTH_SHORT).show();
+                    StyleableToast.makeText(this,
+                            getString(R.string.no_keyword), Toast.LENGTH_SHORT, R.style.StyledToast).show();
                 } else if (keywordName.equals(getString(R.string.all_keyword))) {
-                    MenuItem menuItem = mMenu.findItem(R.id.action_all_keyword);
-                    onOptionsItemSelected(menuItem);
+                    onAllKeywordSelected();
                 } else if (keywordName.equals(getString(R.string.all_think))) {
-                    MenuItem menuItem = mMenu.findItem(R.id.action_all_think);
-                    onOptionsItemSelected(menuItem);
+                    onAllThinkSelected();
                 } else {
                     hideSoftInput();
                     setLayoutShowKeyword(keywordName);
@@ -224,22 +237,29 @@ public class TTMainActivity extends MyActivity {
 
             }
 
-        } else if (id == R.id.action_all_keyword) {
+            return true;
 
-            new ShowAllKeywordTask().execute();
-            hideSoftInput();
-
-        } else if (id == R.id.action_all_think) {
-
-            hideSoftInput();
-            Intent intent = TTListActivity
-                    .newIntent(getApplicationContext(), getString(R.string.all_think));
-            startActivity(intent);
-
-        } else if (id == R.id.generate_data) {
-            new TestTask().execute();
+        } else if (id == R.id.action_more) {
+            mMenuDialogFragment.show(getSupportFragmentManager(), "ContextMenuDialogFragment");
             return true;
         }
+
+//        else if (id == R.id.action_all_keyword) {
+//
+//            new ShowAllKeywordTask().execute();
+//            hideSoftInput();
+//
+//        } else if (id == R.id.action_all_think) {
+//
+//            hideSoftInput();
+//            Intent intent = TTListActivity
+//                    .newIntent(getApplicationContext(), getString(R.string.all_think));
+//            startActivity(intent);
+//        }
+//         else if (id == R.id.generate_data) {
+//            new TestTask().execute();
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -289,6 +309,8 @@ public class TTMainActivity extends MyActivity {
     public void hideTitle() {
         mTitle.setVisibility(View.INVISIBLE);
         mKeywordInputEditText.setVisibility(View.VISIBLE);
+        Animation leftToRight = AnimationUtils.loadAnimation(this, R.anim.left_to_right);
+        mKeywordInputEditText.startAnimation(leftToRight);
     }
 
     // text data 생성 후 mLayoutShowKeyword set
@@ -515,8 +537,8 @@ public class TTMainActivity extends MyActivity {
 
         if (System.currentTimeMillis() > backKeyTime + 2000) {
             backKeyTime = System.currentTimeMillis();
-            toast = Toast.makeText(this, "정말로 종료합니까?", Toast.LENGTH_SHORT);
-            toast.show();
+            StyleableToast.makeText(this,
+                    getString(R.string.wanna_exit), Toast.LENGTH_SHORT, R.style.StyledToast).show();
             return;
         }
 
@@ -528,4 +550,64 @@ public class TTMainActivity extends MyActivity {
 
     }
 
+    private List<MenuObject> getMenuObjects() {
+        MenuObject close = new MenuObject();
+        close.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_cancel));
+
+        MenuObject allThink = new MenuObject(getString(R.string.all_think));
+        allThink.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_all_think));
+
+        MenuObject allKeyword = new MenuObject(getString(R.string.all_keyword));
+        allKeyword.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_all_keyword));
+
+        List<MenuObject> menuObjects = new ArrayList<>();
+        menuObjects.add(close);
+        menuObjects.add(allThink);
+        menuObjects.add(allKeyword);
+
+        for (MenuObject menuObject : menuObjects) {
+            menuObject.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            menuObject.setBgColor(getResources().getColor(R.color.colorPrimary));
+            menuObject.setDividerColor(R.color.white);
+        }
+
+        return menuObjects;
+    }
+
+    private void setMenuItems() {
+        MenuParams menuParams = new MenuParams();
+        menuParams.setActionBarSize((int) getResources().getDimension(R.dimen.action_bar_size));
+        menuParams.setMenuObjects(getMenuObjects());
+        menuParams.setClosableOutside(true);
+        mMenuDialogFragment = ContextMenuDialogFragment.newInstance(menuParams);
+        mMenuDialogFragment.setItemClickListener(this);
+    }
+
+    @Override
+    public void onMenuItemClick(View clickedView, int position) {
+        mMenuDialogFragment.dismiss();
+
+        switch (position) {
+            case 0:
+                break;
+            case 1:
+                onAllThinkSelected();
+                break;
+            case 2:
+                onAllKeywordSelected();
+                break;
+        }
+    }
+
+    private void onAllThinkSelected() {
+        hideSoftInput();
+        Intent intent = TTListActivity
+                .newIntent(getApplicationContext(), getString(R.string.all_think));
+        startActivity(intent);
+    }
+
+    private void onAllKeywordSelected() {
+        new ShowAllKeywordTask().execute();
+        hideSoftInput();
+    }
 }
