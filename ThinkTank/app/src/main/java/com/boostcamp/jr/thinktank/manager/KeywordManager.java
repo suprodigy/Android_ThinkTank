@@ -143,7 +143,6 @@ public class KeywordManager {
     /**
      *
      * @param keywordStarted : 시작되는 키워드의 이름,
-     *        minMaxCount : 키워드가 언급된 Count의 최대값, 최소값
      * @return 탐색 순서대로 keyword의 이름과 count를 Pair로 만들어 반환
      *
      * PriorityQueue를 이용해 탐색 - 많이 언급된 Keyword에게 우선순위를 줌.

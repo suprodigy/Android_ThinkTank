@@ -7,6 +7,7 @@ import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 
 import java.io.File;
+import java.util.Date;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.Realm;
@@ -113,6 +114,15 @@ public class ThinkObserver {
         Realm realm = Realm.getDefaultInstance();
 
         return realm.where(ThinkItem.class).equalTo("id", id).findFirst();
+    }
+
+    public OrderedRealmCollection<ThinkItem> selectByDate(Date date) {
+        Realm realm = Realm.getDefaultInstance();
+        Date nextDay = new Date(date.getYear(), date.getMonth(), date.getDate() + 1);
+        return realm.where(ThinkItem.class)
+                .greaterThanOrEqualTo("dateUpdated", date)
+                .lessThan("dateUpdated", nextDay)
+                .findAllSorted("dateUpdated", Sort.DESCENDING);
     }
 
     private void deleteImageFile(Context context, ThinkItem item) {

@@ -1,5 +1,6 @@
 package com.boostcamp.jr.thinktank;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,8 +9,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,10 +44,13 @@ import com.boostcamp.jr.thinktank.model.KeywordItem;
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 import com.boostcamp.jr.thinktank.model.ThinkItem;
 import com.boostcamp.jr.thinktank.model.ThinkObserver;
+import com.boostcamp.jr.thinktank.speech.AudioWriterPCM;
+import com.boostcamp.jr.thinktank.speech.MyRecognizer;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 import com.muddzdev.styleabletoastlibrary.StyleableToast;
+import com.naver.speech.clientapi.SpeechRecognitionResult;
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
 import com.yalantis.contextmenu.lib.MenuObject;
 import com.yalantis.contextmenu.lib.MenuParams;
@@ -52,6 +59,7 @@ import com.yalantis.contextmenu.lib.interfaces.OnMenuItemClickListener;
 import org.lucasr.dspec.DesignSpec;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -87,6 +95,8 @@ public class TTDetailActivity extends MyActivity
         return intent;
     }
 
+    private static final String CLIENT_ID = BuildConfig.MY_CLIENT_ID;
+
     // Fields...
     private ThinkItem mThinkItem;
     private boolean mDeleted;
@@ -98,6 +108,13 @@ public class TTDetailActivity extends MyActivity
     private ImageAdapter mImageAdapter;
 
     private Handler mHandler;
+    private RecognitionHandler mRecogHandler;
+
+    private MyRecognizer mRecognizer;
+
+    private String mRecogResult;
+    private AudioWriterPCM writer;
+
 
     private ContextMenuDialogFragment mMenuDialogFragment;
 
@@ -330,6 +347,8 @@ public class TTDetailActivity extends MyActivity
         setEventListener();
 
         setMenuItems();
+
+        initRecognizer();
     }
 
     private void init() {
@@ -463,6 +482,17 @@ public class TTDetailActivity extends MyActivity
 
     }
 
+    private void initRecognizer() {
+        mRecogHandler = new RecognitionHandler(this);
+        mRecognizer = new MyRecognizer(this, mRecogHandler, CLIENT_ID);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mRecognizer.getRecognizer().initialize();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -472,9 +502,12 @@ public class TTDetailActivity extends MyActivity
         }
 
         String content = mThinkItem.getContent();
-        if (content == null || content.length() == 0
-                || mKeywordStrings.size() == 0) {
+        if (content == null || content.length() == 0) {
             return;
+        }
+
+        if (mKeywordStrings.size() == 0) {
+            mKeywordStrings.add(new Pair<>(getString(R.string.default_keyword), false));
         }
 
         RealmList<KeywordItem> keywords = new RealmList<>();
@@ -517,6 +550,12 @@ public class TTDetailActivity extends MyActivity
             MyLog.print("updated...........");
         }
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mRecognizer.getRecognizer().release();
     }
 
     @Override
@@ -633,9 +672,12 @@ public class TTDetailActivity extends MyActivity
                 onImageButtonClicked();
                 break;
             case 3:
-                onShareButtonClicked();
+                onRecordButtonClicked();
                 break;
             case 4:
+                onShareButtonClicked();
+                break;
+            case 5:
                 onDeleteButtonClicked();
                 break;
         }
@@ -661,6 +703,23 @@ public class TTDetailActivity extends MyActivity
         Intent i = new Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(i, REQUEST_LOAD_IMAGE);
+    }
+
+    void onRecordButtonClicked() {
+        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+        }
+
+        if(!mRecognizer.getRecognizer().isRunning()) {
+            mRecogResult = "";
+            StyleableToast.makeText(this, getString(R.string.record_ready),
+                    Toast.LENGTH_SHORT, R.style.StyledToast).show();
+            mRecognizer.recognize();
+        } else {
+            MyLog.print("stop and wait Final Result");
+            mRecognizer.getRecognizer().stop();
+        }
     }
 
     void onShareButtonClicked() {
@@ -850,10 +909,14 @@ public class TTDetailActivity extends MyActivity
         MenuObject getImage = new MenuObject(getString(R.string.get_image_from_gallery));
         getImage.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_get_image));
 
+        MenuObject getRecord = new MenuObject(getString(R.string.get_record));
+        getRecord.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_record));
+
         List<MenuObject> menuObjects = new ArrayList<>();
         menuObjects.add(close);
         menuObjects.add(takePhoto);
         menuObjects.add(getImage);
+        menuObjects.add(getRecord);
 
         if (mIsAdded) {
             MenuObject shareThink = new MenuObject(getString(R.string.share_menu));
@@ -891,4 +954,85 @@ public class TTDetailActivity extends MyActivity
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
+    // 음성 인식 (using Naver API)
+    static class RecognitionHandler extends Handler {
+        private final WeakReference<TTDetailActivity> mActivity;
+        RecognitionHandler(TTDetailActivity activity) {
+            mActivity = new WeakReference<TTDetailActivity>(activity);
+        }
+        @Override
+        public void handleMessage(Message msg) {
+            TTDetailActivity activity = mActivity.get();
+            if (activity != null) {
+                activity.handleMessage(msg);
+            }
+        }
+    }
+
+    private void handleMessage(Message msg) {
+
+        switch (msg.what) {
+            case R.id.clientReady:
+                StyleableToast.makeText(this,
+                        getString(R.string.record_connected), Toast.LENGTH_SHORT, R.style.StyledToast).show();
+                writer = new AudioWriterPCM(Environment.getExternalStorageDirectory().getAbsolutePath()
+                        + "/SpeechRecognize");
+                writer.open("ThinkTank");
+                break;
+            case R.id.audioRecording:
+                writer.write((short[]) msg.obj);
+                break;
+            case R.id.partialResult:
+                mRecogResult = (String) (msg.obj);
+
+                String content = mThinkItem.getContent();
+
+                if (content == null || content.length() == 0) {
+                    mContentEditText.setText(mRecogResult);
+                } else {
+                    mContentEditText.setText(content + "\n" + mRecogResult);
+                }
+
+                break;
+            case R.id.finalResult:
+                SpeechRecognitionResult speechRecognitionResult = (SpeechRecognitionResult) msg.obj;
+                List<String> results = speechRecognitionResult.getResults();
+
+                StringBuilder strBuf = new StringBuilder();
+                for(String result : results) {
+                    strBuf.append(result);
+                    strBuf.append("\n");
+                }
+
+                mRecogResult = strBuf.toString();
+
+                content = mThinkItem.getContent();
+
+                if (content == null ||content.length() == 0) {
+                    mContentEditText.setText(mRecogResult);
+                } else {
+                    mContentEditText.setText(content + "\n" + mRecogResult);
+                }
+
+                break;
+            case R.id.recognitionError:
+                if (writer != null) {
+                    writer.close();
+                }
+                mRecogResult = "Error code : " + msg.obj.toString();
+                StyleableToast.makeText(this, mRecogResult,
+                        Toast.LENGTH_SHORT, R.style.StyledToast).show();
+
+                break;
+            case R.id.clientInactive:
+                if (writer != null) {
+                    writer.close();
+                }
+
+                break;
+        }
+    }
+
+
 }

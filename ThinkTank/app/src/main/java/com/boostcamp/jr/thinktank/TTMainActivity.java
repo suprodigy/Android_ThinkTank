@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +39,7 @@ import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 import com.boostcamp.jr.thinktank.utils.TestUtil;
+import com.github.sundeepk.compactcalendarview.CompactCalendarView;
 import com.muddzdev.styleabletoastlibrary.StyleableToast;
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
 import com.yalantis.contextmenu.lib.MenuObject;
@@ -47,6 +49,7 @@ import com.yalantis.contextmenu.lib.interfaces.OnMenuItemClickListener;
 import org.lucasr.dspec.DesignSpec;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -74,6 +77,12 @@ public class TTMainActivity extends MyActivity
     AutoCompleteTextView mKeywordInputEditText;
     @BindView(R.id.all_keyword_recycler_view)
     RecyclerView mAllKeywordRecyclerView;
+    @BindView(R.id.layout_for_calendar)
+    LinearLayout mLayoutForCalendar;
+    @BindView(R.id.month_textview)
+    TextView mMonthTextView;
+    @BindView(R.id.calendar_view)
+    CompactCalendarView mCalendar;
 
     private ForEffectTask mForEffectTask;
     private List<TextView> mTextViews = new ArrayList<>();
@@ -111,6 +120,8 @@ public class TTMainActivity extends MyActivity
         setMainAutoComplete();
 
         setMenuItems();
+
+        setCalendar();
 
         DesignSpec background1 = DesignSpec.fromResource(mLayoutShowKeyword, R.raw.background);
         mLayoutShowKeyword.setBackground(background1);
@@ -168,6 +179,25 @@ public class TTMainActivity extends MyActivity
         mForEffectTask = new ForEffectTask();
         mForEffectTask.execute(startKeyword);
 
+    }
+
+    private void setCalendar() {
+        mMonthTextView.setText((new Date().getMonth() + 1) + "월");
+
+        mCalendar.setListener(new CompactCalendarView.CompactCalendarViewListener() {
+            @Override
+            public void onDayClick(Date dateClicked) {
+                MyLog.print("Day was clicked: " + dateClicked);
+                Intent intent = TTListActivity.newIntent(getApplicationContext(), dateClicked);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onMonthScroll(Date firstDayOfNewMonth) {
+                MyLog.print("Month was scrolled to: " + firstDayOfNewMonth);
+                mMonthTextView.setText((firstDayOfNewMonth.getMonth() + 1) + "월");
+            }
+        });
     }
 
     @Override
@@ -264,14 +294,14 @@ public class TTMainActivity extends MyActivity
         return super.onOptionsItemSelected(item);
     }
 
-    public  boolean isStoragePermissionGranted() {
+    public boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
-                MyLog.print("Permission is granted");
+                MyLog.print("Write Permission is granted");
                 return true;
             } else {
-                MyLog.print("Permission is revoked");
+                MyLog.print("Write Permission is revoked");
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                 return false;
             }
@@ -286,19 +316,29 @@ public class TTMainActivity extends MyActivity
     private void showProgressBar() {
         mLayoutShowKeyword.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.INVISIBLE);
         mLayoutProgressBar.setVisibility(View.VISIBLE);
     }
 
     private void showResult() {
         mLayoutProgressBar.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.INVISIBLE);
         mLayoutShowKeyword.setVisibility(View.VISIBLE);
     }
 
     private void showRecyclerView() {
         mLayoutProgressBar.setVisibility(View.INVISIBLE);
         mLayoutShowKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.INVISIBLE);
         mLayoutForAllKeyword.setVisibility(View.VISIBLE);
+    }
+
+    private void showCalendarView() {
+        mLayoutProgressBar.setVisibility(View.INVISIBLE);
+        mLayoutShowKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.VISIBLE);
     }
 
     public void showTitle() {
@@ -562,10 +602,14 @@ public class TTMainActivity extends MyActivity
         MenuObject allKeyword = new MenuObject(getString(R.string.all_keyword));
         allKeyword.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_all_keyword));
 
+        MenuObject findByDate = new MenuObject(getString(R.string.find_by_date));
+        findByDate.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_calendar));
+
         List<MenuObject> menuObjects = new ArrayList<>();
         menuObjects.add(close);
         menuObjects.add(allThink);
         menuObjects.add(allKeyword);
+        menuObjects.add(findByDate);
 
         for (MenuObject menuObject : menuObjects) {
             menuObject.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -598,6 +642,9 @@ public class TTMainActivity extends MyActivity
             case 2:
                 onAllKeywordSelected();
                 break;
+            case 3:
+                showCalendarView();
+                break;
         }
     }
 
@@ -612,4 +659,5 @@ public class TTMainActivity extends MyActivity
         new ShowAllKeywordTask().execute();
         hideSoftInput();
     }
+
 }

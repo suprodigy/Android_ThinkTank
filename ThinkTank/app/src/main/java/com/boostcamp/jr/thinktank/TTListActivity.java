@@ -25,6 +25,8 @@ import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 
 import org.lucasr.dspec.DesignSpec;
 
+import java.util.Date;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.OrderedRealmCollection;
@@ -33,6 +35,7 @@ import io.realm.RealmRecyclerViewAdapter;
 public class TTListActivity extends MyActivity {
 
     private static final String EXTRA_KEYWORD = "keyword";
+    private static final String EXTRA_DATE = "date";
 
     private TTAdapter mAdapter;
 
@@ -56,15 +59,28 @@ public class TTListActivity extends MyActivity {
         return intent;
     }
 
+    public static Intent newIntent(Context packageContext, Date date) {
+        Intent intent = new Intent(packageContext, TTListActivity.class);
+        intent.putExtra(EXTRA_DATE, date);
+        return intent;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tt_list);
         ButterKnife.bind(this);
 
-        String keyword = getIntent().getStringExtra(EXTRA_KEYWORD);
-        setRecyclerView(keyword);
-        setToolbar(keyword);
+        Date date = (Date) getIntent().getSerializableExtra(EXTRA_DATE);
+        if (date != null) {
+            setRecyclerView(date);
+            String text = DateFormat.format("MMM d일", date).toString();
+            setToolbar(text);
+        } else {
+            String keyword = getIntent().getStringExtra(EXTRA_KEYWORD);
+            setRecyclerView(keyword);
+            setToolbar(keyword);
+        }
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -82,10 +98,10 @@ public class TTListActivity extends MyActivity {
 //        }
     }
 
-    private void setToolbar(String keyword) {
+    private void setToolbar(String text) {
         mInputKeywordEditTextIsVisible = false;
-        mInputKeywordTextView.setText("#" + keyword);
-        mInputKeywordEditText.setText("#" + keyword);
+        mInputKeywordTextView.setText("#" + text);
+        mInputKeywordEditText.setText("#" + text);
     }
 
     private void setRecyclerView(String keyword) {
@@ -97,6 +113,14 @@ public class TTListActivity extends MyActivity {
         } else {
             mAdapter = new TTAdapter(this, thinkObserver.selectThatHasKeyword(keyword));
         }
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.requestFocus();
+    }
+
+    private void setRecyclerView(Date date) {
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mAdapter = new TTAdapter(this, ThinkObserver.get().selectByDate(date));
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.requestFocus();
