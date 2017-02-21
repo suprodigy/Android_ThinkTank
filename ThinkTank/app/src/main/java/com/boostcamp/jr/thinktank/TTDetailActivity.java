@@ -485,6 +485,11 @@ public class TTDetailActivity extends MyActivity
     private void initRecognizer() {
         mRecogHandler = new RecognitionHandler(this);
         mRecognizer = new MyRecognizer(this, mRecogHandler, CLIENT_ID);
+
+        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+        }
     }
 
     @Override
@@ -706,11 +711,6 @@ public class TTDetailActivity extends MyActivity
     }
 
     void onRecordButtonClicked() {
-        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
-        }
-
         if(!mRecognizer.getRecognizer().isRunning()) {
             mRecogResult = "";
             StyleableToast.makeText(this, getString(R.string.record_ready),
@@ -986,28 +986,18 @@ public class TTDetailActivity extends MyActivity
             case R.id.partialResult:
                 mRecogResult = (String) (msg.obj);
 
-                String content = mThinkItem.getContent();
-
-                if (content == null || content.length() == 0) {
-                    mContentEditText.setText(mRecogResult);
-                } else {
-                    mContentEditText.setText(content + "\n" + mRecogResult);
-                }
+                MyLog.print("Record PartialResult : " + mRecogResult);
 
                 break;
             case R.id.finalResult:
                 SpeechRecognitionResult speechRecognitionResult = (SpeechRecognitionResult) msg.obj;
                 List<String> results = speechRecognitionResult.getResults();
 
-                StringBuilder strBuf = new StringBuilder();
-                for(String result : results) {
-                    strBuf.append(result);
-                    strBuf.append("\n");
+                if (results != null && results.size() >= 1) {
+                    mRecogResult = results.get(0);
                 }
 
-                mRecogResult = strBuf.toString();
-
-                content = mThinkItem.getContent();
+                String content = mThinkItem.getContent();
 
                 if (content == null ||content.length() == 0) {
                     mContentEditText.setText(mRecogResult);

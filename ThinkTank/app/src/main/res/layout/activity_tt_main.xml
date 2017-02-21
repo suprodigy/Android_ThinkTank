@@ -84,7 +84,7 @@
                     android:id="@+id/calendar_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:compactCalendarBackgroundColor="@color/backgroundColor"
+                    app:compactCalendarBackgroundColor="@android:color/transparent"
                     app:compactCalendarCurrentDayBackgroundColor="@color/colorAccentLight"
                     app:compactCalendarCurrentSelectedDayBackgroundColor="@color/colorAccent"
                     app:compactCalendarTargetHeight="@dimen/calendar_height"
@@ -92,7 +92,6 @@
                     app:compactCalendarTextSize="12sp"/>
 
             </LinearLayout>
-
 
         </android.support.v7.widget.CardView>
 

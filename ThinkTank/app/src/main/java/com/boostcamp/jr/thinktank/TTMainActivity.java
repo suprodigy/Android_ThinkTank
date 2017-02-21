@@ -128,6 +128,9 @@ public class TTMainActivity extends MyActivity
 
         DesignSpec background2 = DesignSpec.fromResource(mLayoutForAllKeyword, R.raw.background);
         mLayoutForAllKeyword.setBackground(background2);
+
+        DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
+        mLayoutForCalendar.setBackground(background3);
     }
 
     private void setMainAutoComplete() {
