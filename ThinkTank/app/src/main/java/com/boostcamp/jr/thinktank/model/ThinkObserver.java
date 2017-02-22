@@ -67,13 +67,13 @@ public class ThinkObserver {
     public void delete(Context context, ThinkItem item) {
         Realm realm = Realm.getDefaultInstance();
 
-        final ThinkItem ItemToDelete = realm.where(ThinkItem.class)
+        final ThinkItem itemToDelete = realm.where(ThinkItem.class)
                 .equalTo("id", item.getId()).findFirst();
 
-        deleteImageFile(context, ItemToDelete);
+        deleteImageFile(context, itemToDelete);
 
         KeywordObserver observer = KeywordObserver.get();
-        RealmList<KeywordItem> list = ItemToDelete.getKeywords();
+        RealmList<KeywordItem> list = itemToDelete.getKeywords();
         for(KeywordItem keyword : list) {
             KeywordItem temp = observer.getCopiedObject(keyword);
             temp.setCount(temp.getCount()-1);
@@ -85,7 +85,7 @@ public class ThinkObserver {
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                ItemToDelete.deleteFromRealm();
+                itemToDelete.deleteFromRealm();
             }
         });
 

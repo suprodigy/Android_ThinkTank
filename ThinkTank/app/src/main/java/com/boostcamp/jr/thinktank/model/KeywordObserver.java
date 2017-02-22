@@ -80,7 +80,10 @@ public class KeywordObserver {
 
     public OrderedRealmCollection<KeywordItem> selectAllOrderByName() {
         Realm realm = Realm.getDefaultInstance();
-        return realm.where(KeywordItem.class).findAllSorted("name");
+
+        return realm.where(KeywordItem.class)
+                .notEqualTo("count", 0)
+                .findAllSorted("name");
     }
 
     public List<String> getMostUsedKeyword() {

@@ -11,6 +11,7 @@
     <string name="generate_data">테스트 데이터 생성</string>
     <string name="all_keyword">모든 키워드</string>
     <string name="all_think">모든 메모</string>
+    <string name="random_keyword">랜덤 키워드 메모</string>
     <string name="more">더보기</string>
     <string name="wanna_exit">정말로 종료합니까?</string>
     <string name="find_by_date">날짜로 조회하기</string>
@@ -55,5 +56,15 @@
     <string name="delete_dialog_title">키워드 삭제</string>
     <string name="text_if_keywords_not_exist">입력된 키워드가 없습니다.</string>
     <string name="delete_dialog_ok">삭제</string>
+
+    <!-- TTRandomMainActivity -->
+    <string name="select">조회하기</string>
+    <string name="keyword">키워드</string>
+    <string name="think">메모</string>
+    <string name="select_by_date">날짜</string>
+    <string name="generate_randoms">랜덤 단어 생성</string>
+    <string name="save">저장하기</string>
+    <string name="no_keyword_hint">키워드를 생성하세요.</string>
+    <string name="generate_randoms_start">키워드를 생성합니다.</string>
 
 </resources>

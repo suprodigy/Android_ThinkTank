@@ -640,11 +640,15 @@ public class TTMainActivity extends MyActivity
         MenuObject findByDate = new MenuObject(getString(R.string.find_by_date));
         findByDate.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_calendar));
 
+        MenuObject randomKeyword = new MenuObject(getString(R.string.random_keyword));
+        randomKeyword.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_random_keyword));
+
         List<MenuObject> menuObjects = new ArrayList<>();
         menuObjects.add(close);
         menuObjects.add(allThink);
         menuObjects.add(allKeyword);
         menuObjects.add(findByDate);
+        menuObjects.add(randomKeyword);
 
         for (MenuObject menuObject : menuObjects) {
             menuObject.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -679,6 +683,10 @@ public class TTMainActivity extends MyActivity
                 break;
             case 3:
                 showCalendarView();
+                break;
+            case 4:
+                Intent intent = new Intent(this, TTRandomMainActivity.class);
+                startActivity(intent);
                 break;
         }
     }

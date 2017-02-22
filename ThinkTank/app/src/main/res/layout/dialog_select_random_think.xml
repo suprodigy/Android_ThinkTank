@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingPrefix"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:background="@color/colorPrimary"
+        android:padding="@dimen/title_padding"
+        android:text="@string/select"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_marginTop="@dimen/margin_between_items"
+        android:padding="@dimen/margin_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:background="@drawable/button_selector_effect"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:id="@+id/all_keyword"
+            style="?android:attr/buttonBarButtonStyle"
+            android:drawableTop="@drawable/ic_all_keyword2"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:text="@string/keyword"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/all_think"
+            android:background="@drawable/button_selector_effect"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            style="?android:attr/buttonBarButtonStyle"
+            android:drawableTop="@drawable/ic_all_think2"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:text="@string/think"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/select_by_date"
+            android:background="@drawable/button_selector_effect"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            style="?android:attr/buttonBarButtonStyle"
+            android:drawableTop="@drawable/ic_select_by_date"
+            android:text="@string/select_by_date"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</LinearLayout>
