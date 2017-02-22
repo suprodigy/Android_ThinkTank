@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,11 +22,11 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -49,6 +48,11 @@ import com.boostcamp.jr.thinktank.speech.MyRecognizer;
 import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.muddzdev.styleabletoastlibrary.StyleableToast;
 import com.naver.speech.clientapi.SpeechRecognitionResult;
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
@@ -245,6 +249,18 @@ public class TTDetailActivity extends MyActivity
                         mDialog.dismiss();
                     }
                 });
+
+        keywordEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    mDialog.getPositiveButton().callOnClick();
+                    return true;
+                }
+
+                return false;
+            }
+        });
 
         mDialog.show();
     }
@@ -821,36 +837,52 @@ public class TTDetailActivity extends MyActivity
 
         public void bindImage(File photoFile) {
             mFile = photoFile;
-
-            ViewTreeObserver observer = mPhotoImageView.getViewTreeObserver();
-            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    updatePhotoView(mPhotoImageView.getWidth(), mPhotoImageView.getHeight());
-                }
-            });
+            updatePhotoView();
         }
 
-        private void updatePhotoView(final int destWidth, final int destHeight) {
+        private void updatePhotoView() {
             if (mFile == null || !mFile.exists()) {
+                Glide.clear(mPhotoImageView);
                 removeFile(mFile, getAdapterPosition());
+                mPhotoImageView.setImageBitmap(null);
             } else {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final Bitmap bitmap = PhotoUtil.getScaledBitmap(
-                                mFile.getPath(), destWidth, destHeight
-                        );
-
-                        mHandler.post(new Runnable() {
+                Glide.with(getApplicationContext())
+                        .load(mFile)
+                        .centerCrop()
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .listener(new RequestListener<File, GlideDrawable>() {
                             @Override
-                            public void run() {
-                                mPhotoImageView.setImageBitmap(bitmap);
+                            public boolean onException(Exception e, File model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                MyLog.print("Image Exception : " + e.toString());
+                                return false;
                             }
-                        });
-                    }
-                }).start();
+
+                            @Override
+                            public boolean onResourceReady(GlideDrawable resource, File model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                return false;
+                            }
+                        })
+                        .into(mPhotoImageView);
             }
+//            if (mFile == null || !mFile.exists()) {
+//                removeFile(mFile, getAdapterPosition());
+//            } else {
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        final Bitmap bitmap = PhotoUtil.getScaledBitmap(
+//                                mFile.getPath(), destWidth, destHeight
+//                        );
+//
+//                        mHandler.post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                mPhotoImageView.setImageBitmap(bitmap);
+//                            }
+//                        });
+//                    }
+//                }).start();
+//            }
         }
 
         @Override
@@ -1022,7 +1054,7 @@ public class TTDetailActivity extends MyActivity
 
                 break;
         }
-    }
 
+    }
 
 }

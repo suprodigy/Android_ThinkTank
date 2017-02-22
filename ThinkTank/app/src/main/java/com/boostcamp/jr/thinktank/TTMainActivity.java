@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -84,6 +85,8 @@ public class TTMainActivity extends MyActivity
     @BindView(R.id.calendar_view)
     CompactCalendarView mCalendar;
 
+    private Menu mMenu;
+
     private ForEffectTask mForEffectTask;
     private List<TextView> mTextViews = new ArrayList<>();
     private boolean mTitleIsShown;
@@ -131,6 +134,8 @@ public class TTMainActivity extends MyActivity
 
         DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
         mLayoutForCalendar.setBackground(background3);
+
+//        new TestTask().execute();
     }
 
     private void setMainAutoComplete() {
@@ -143,6 +148,18 @@ public class TTMainActivity extends MyActivity
                 android.R.layout.simple_dropdown_item_1line,
                 items
         ));
+
+        mKeywordInputEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    MenuItem item = mMenu.findItem(R.id.action_search);
+                    onOptionsItemSelected(item);
+                }
+
+                return false;
+            }
+        });
     }
 
     private void initLayoutShowKeyword() {
@@ -174,7 +191,6 @@ public class TTMainActivity extends MyActivity
     }
 
     private void setLayoutShowKeyword(String startKeyword) {
-
         if(mForEffectTask != null) {
             mForEffectTask.setIsCancelled(true);
         }
@@ -235,6 +251,7 @@ public class TTMainActivity extends MyActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_main, menu);
+        mMenu = menu;
         return true;
     }
 

@@ -23,6 +23,8 @@ public class ImagePagerActivity extends MyActivity {
     @BindView(R.id.image_pager)
     ViewPager mImagePager;
 
+    ImagePagerAdapter mAdapter;
+
     public static Intent newIntent(Context context, int position) {
         Intent intent = new Intent(context, ImagePagerActivity.class);
         intent.putExtra(EXTRA_IMAGE_POSITION, position);
@@ -45,8 +47,8 @@ public class ImagePagerActivity extends MyActivity {
             e.printStackTrace();
         }
 
-        ImagePagerAdapter adapter = new ImagePagerAdapter(getSupportFragmentManager());
-        mImagePager.setAdapter(adapter);
+        mAdapter = new ImagePagerAdapter(getSupportFragmentManager());
+        mImagePager.setAdapter(mAdapter);
 
         int position = getIntent().getIntExtra(EXTRA_IMAGE_POSITION, 0);
         mImagePager.setCurrentItem(position, true);
@@ -59,5 +61,12 @@ public class ImagePagerActivity extends MyActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ImageRepository.get().setFiles(null);
+        mAdapter.swapFiles();
     }
 }

@@ -29,6 +29,7 @@
             style="@style/ToolbarTextColor"
             android:completionThreshold="1"
             android:gravity="center_vertical"
+            android:maxLines="1"
             android:textSize="30sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>

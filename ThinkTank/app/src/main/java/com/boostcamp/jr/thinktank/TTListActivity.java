@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.format.DateFormat;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +39,8 @@ public class TTListActivity extends MyActivity {
     private static final String EXTRA_DATE = "date";
 
     private TTAdapter mAdapter;
+
+    private Menu mMenu;
 
     @BindView(R.id.think_list_recycler_view)
     RecyclerView mRecyclerView;
@@ -101,7 +104,19 @@ public class TTListActivity extends MyActivity {
     private void setToolbar(String text) {
         mInputKeywordEditTextIsVisible = false;
         mInputKeywordTextView.setText("#" + text);
-        mInputKeywordEditText.setText("#" + text);
+        mInputKeywordEditText.setText("");
+
+        mInputKeywordEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    MenuItem item = mMenu.findItem(R.id.action_search);
+                    onOptionsItemSelected(item);
+                }
+
+                return false;
+            }
+        });
     }
 
     private void setRecyclerView(String keyword) {
@@ -228,6 +243,7 @@ public class TTListActivity extends MyActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_tt_list, menu);
+        mMenu = menu;
         return true;
     }
 

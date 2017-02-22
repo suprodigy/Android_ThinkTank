@@ -43,4 +43,14 @@ public class ImagePagerAdapter extends FragmentStatePagerAdapter {
     public int getCount() {
         return (mFiles == null) ? 0 : mFiles.size();
     }
+
+//    public void setFiles() {
+//        mFiles = ImageRepository.get().getFiles();
+//        notifyDataSetChanged();
+//    }
+
+    public void swapFiles() {
+        mFiles = ImageRepository.get().getFiles();
+        notifyDataSetChanged();
+    }
 }

@@ -1,7 +1,6 @@
 package com.boostcamp.jr.thinktank.image;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -9,11 +8,15 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import com.boostcamp.jr.thinktank.R;
-import com.boostcamp.jr.thinktank.utils.PhotoUtil;
+import com.boostcamp.jr.thinktank.utils.MyLog;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.io.File;
 
@@ -57,14 +60,7 @@ public class ImageFragment extends Fragment {
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.image_pager_item, container, false);
         ButterKnife.bind(this, rootView);
-
-        ViewTreeObserver observer = mImageView.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                updateImageView(mImageView.getWidth(), mImageView.getHeight());
-            }
-        });
+        updateImageView();
 
         return rootView;
     }
@@ -75,31 +71,54 @@ public class ImageFragment extends Fragment {
         mContext = context;
     }
 
-    private void updateImageView(final int destWidth, final int destHeight) {
+    private void updateImageView() {
+        if (mFile == null || !mFile.exists()) {
+            Glide.clear(mImageView);
+            mImageView.setImageBitmap(null);
+        } else {
+            Glide.with(mContext)
+                    .load(mFile)
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .listener(new RequestListener<File, GlideDrawable>() {
+                        @Override
+                        public boolean onException(Exception e, File model, Target<GlideDrawable> target, boolean isFirstResource) {
+                            MyLog.print("Image Exception : " + e.toString());
+                            return false;
+                        }
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (mFile == null || !mFile.exists()) {
-                    mHandler.post(new Runnable() {
                         @Override
-                        public void run() {
-                            mImageView.setImageDrawable(null);
+                        public boolean onResourceReady(GlideDrawable resource, File model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            return false;
                         }
-                    });
-                } else {
-                    final Bitmap bitmap = PhotoUtil.getScaledBitmap(
-                            mFile.getPath(), destWidth, destHeight
-                    );
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mImageView.setImageBitmap(bitmap);
-                        }
-                    });
-                }
-            }
-        }).start();
+                    })
+                    .into(mImageView);
+        }
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                if (mFile == null || !mFile.exists()) {
+//                    mHandler.post(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            mImageView.setImageDrawable(null);
+//                        }
+//                    });
+//                } else {
+//                    final Bitmap bitmap = PhotoUtil.getScaledBitmap(
+//                            mFile.getPath(), destWidth, destHeight
+//                    );
+//                    MyLog.print("updateImageView.......................................................");
+//                    mHandler.post(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            mImageView.setImageBitmap(bitmap);
+//                        }
+//                    });
+//                }
+//            }
+//        }).start();
 
     }
 
