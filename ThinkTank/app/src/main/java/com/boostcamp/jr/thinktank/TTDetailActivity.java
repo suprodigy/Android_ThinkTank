@@ -1063,6 +1063,8 @@ public class TTDetailActivity extends MyActivity
 
                 break;
             case R.id.recognitionError:
+                mDialog.dismiss();
+
                 if (writer != null) {
                     writer.close();
                 }

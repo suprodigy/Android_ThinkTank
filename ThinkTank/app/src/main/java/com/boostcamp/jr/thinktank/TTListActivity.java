@@ -112,6 +112,7 @@ public class TTListActivity extends MyActivity {
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
                     MenuItem item = mMenu.findItem(R.id.action_search);
                     onOptionsItemSelected(item);
+                    return true;
                 }
 
                 return false;

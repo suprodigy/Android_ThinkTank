@@ -155,6 +155,7 @@ public class TTMainActivity extends MyActivity
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {
                     MenuItem item = mMenu.findItem(R.id.action_search);
                     onOptionsItemSelected(item);
+                    return true;
                 }
 
                 return false;
@@ -264,7 +265,6 @@ public class TTMainActivity extends MyActivity
             if (mTitleIsShown) {
 
                 hideTitle();
-                mTitleIsShown = false;
                 mKeywordInputEditText.requestFocus();
                 showSoftInput();
 
@@ -369,6 +369,7 @@ public class TTMainActivity extends MyActivity
     }
 
     public void hideTitle() {
+        mTitleIsShown = false;
         mTitle.setVisibility(View.INVISIBLE);
         mKeywordInputEditText.setVisibility(View.VISIBLE);
         Animation leftToRight = AnimationUtils.loadAnimation(this, R.anim.left_to_right);
@@ -487,6 +488,20 @@ public class TTMainActivity extends MyActivity
                             Intent intent = TTListActivity.newIntent(getApplicationContext(), keywordName);
                             startActivity(intent);
                         }
+                    }
+                });
+
+                textView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        TextView textView = (TextView) v;
+                        if (textView.getText().length() != 0) {
+                            hideTitle();
+                            mKeywordInputEditText.setText(textView.getText());
+                            MenuItem item = mMenu.findItem(R.id.action_search);
+                            onOptionsItemSelected(item);
+                        }
+                        return true;
                     }
                 });
             }
