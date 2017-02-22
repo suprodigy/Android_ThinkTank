@@ -19,3 +19,6 @@
 -keep class com.naver.speech.clientapi.SpeechRecognizer {
     protected private *;
  }
+
+-keep class com.wang.avi.** { *; }
+-keep class com.wang.avi.indicators.** { *; }

@@ -55,6 +55,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.muddzdev.styleabletoastlibrary.StyleableToast;
 import com.naver.speech.clientapi.SpeechRecognitionResult;
+import com.wang.avi.AVLoadingIndicatorView;
 import com.yalantis.contextmenu.lib.ContextMenuDialogFragment;
 import com.yalantis.contextmenu.lib.MenuObject;
 import com.yalantis.contextmenu.lib.MenuParams;
@@ -119,8 +120,10 @@ public class TTDetailActivity extends MyActivity
     private String mRecogResult;
     private AudioWriterPCM writer;
 
-
     private ContextMenuDialogFragment mMenuDialogFragment;
+
+    private AVLoadingIndicatorView mRecordingIndicator;
+    private LinearLayout mLayoutRecordConnected;
 
     // MaterialDialog library 사용을 위해 정의한 객체
     private MaterialDialog mDialog;
@@ -365,6 +368,8 @@ public class TTDetailActivity extends MyActivity
         setMenuItems();
 
         initRecognizer();
+
+//        new GetKeywordTask().execute("");
     }
 
     private void init() {
@@ -729,8 +734,18 @@ public class TTDetailActivity extends MyActivity
     void onRecordButtonClicked() {
         if(!mRecognizer.getRecognizer().isRunning()) {
             mRecogResult = "";
-            StyleableToast.makeText(this, getString(R.string.record_ready),
-                    Toast.LENGTH_SHORT, R.style.StyledToast).show();
+
+            View view = getLayoutInflater().inflate(R.layout.layout_record, null);
+
+            mLayoutRecordConnected = (LinearLayout) view.findViewById(R.id.layout_record_connected);
+            mRecordingIndicator = (AVLoadingIndicatorView) view.findViewById(R.id.recording_indicator);
+
+            mDialog = new MaterialDialog(this)
+                    .setView(view)
+                    .setBackgroundResource(R.color.colorAccent);
+//            StyleableToast.makeText(this, getString(R.string.record_ready),
+//                    Toast.LENGTH_SHORT, R.style.StyledToast).show();
+
             mRecognizer.recognize();
         } else {
             MyLog.print("stop and wait Final Result");
@@ -756,6 +771,7 @@ public class TTDetailActivity extends MyActivity
 //    private class GetKeywordTask extends AsyncTask<String, Void, String> {
 //
 //        Context mContext;
+//        KeywordExtractor mExtractor;
 //
 //        @Override
 //        protected void onPreExecute() {
@@ -767,18 +783,20 @@ public class TTDetailActivity extends MyActivity
 //
 //        @Override
 //        protected String doInBackground(String... params) {
-//            String content = params[0];
+////            String content = params[0];
 //
-//            Log.d(TAG, "키워드를 추출합니다...");
-//            String content = "단어";
+//            mExtractor = new KeywordExtractor();
 //
-//            String keywordExtracted = KeywordUtil.getKeywordFromContent(content);
+//            MyLog.print("키워드를 추출합니다...");
+//            String content = "메모를 입력하세요";
 //
-//            for(String noun : mNouns) {
+//            String keywordExtracted = KeywordUtil.getKeywordFromContent(mExtractor, content);
+//
+////            for(String noun : mNouns) {
 //                NaverRestClient<KeywordService> client = new NaverRestClient<>();
 //                KeywordService service = client.getClient(KeywordService.class);
 //
-//                Call<ResponseFromNaver> call = service.getKeywordsFromNaver("search", "blog.json", noun);
+//                Call<ResponseFromNaver> call = service.getKeywordsFromNaver("search", "blog.json", keywordExtracted);
 //                call.enqueue(new Callback<ResponseFromNaver>() {
 //                    @Override
 //                    public void onResponse(Call<ResponseFromNaver> call, Response<ResponseFromNaver> response) {
@@ -787,7 +805,8 @@ public class TTDetailActivity extends MyActivity
 //                            ResponseFromNaver responseFromNaver = response.body();
 //                            List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
 //                            for(ResponseFromNaver.Item item : items) {
-//                                List<String> nounsFromTitle = KeywordUtil.getNounsFromText(item.getTitle());
+//                                MyLog.print(item.getTitle());
+//                                List<String> nounsFromTitle = KeywordUtil.getKeywordFromContent(item.getTitle());
 //                                for (String nounFromTitle : nounsFromTitle) {
 //                                    if (!mNouns.contains(nounFromTitle)) {
 //                                        mNouns.add(nounFromTitle);
@@ -795,20 +814,20 @@ public class TTDetailActivity extends MyActivity
 //                                }
 //                            }
 //                        } else {
-//                            Log.d(TAG, "호출 실패 : " + response.errorBody());
+//                            MyLog.print("호출 실패 : " + response.errorBody());
 //                        }
 //
 //                    }
 //
 //                    @Override
 //                    public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
-//                        Log.d(TAG, "오류 발생");
+//                        MyLog.print("오류 발생");
 //                        t.printStackTrace();
 //                    }
 //                });
-//            }
+////            }
 //
-//            Log.d(TAG, "keywordExtracted : " + keywordExtracted);
+//            MyLog.print("keywordExtracted : " + keywordExtracted);
 //            return keywordExtracted;
 //        }
 //
@@ -1006,8 +1025,10 @@ public class TTDetailActivity extends MyActivity
 
         switch (msg.what) {
             case R.id.clientReady:
-                StyleableToast.makeText(this,
-                        getString(R.string.record_connected), Toast.LENGTH_SHORT, R.style.StyledToast).show();
+//                StyleableToast.makeText(this,
+//                        getString(R.string.record_connected), Toast.LENGTH_SHORT, R.style.StyledToast).show();
+                mDialog.show();
+
                 writer = new AudioWriterPCM(Environment.getExternalStorageDirectory().getAbsolutePath()
                         + "/SpeechRecognize");
                 writer.open("ThinkTank");
@@ -1016,12 +1037,15 @@ public class TTDetailActivity extends MyActivity
                 writer.write((short[]) msg.obj);
                 break;
             case R.id.partialResult:
+                showRecordingIndicator();
                 mRecogResult = (String) (msg.obj);
 
                 MyLog.print("Record PartialResult : " + mRecogResult);
 
                 break;
             case R.id.finalResult:
+                mDialog.dismiss();
+
                 SpeechRecognitionResult speechRecognitionResult = (SpeechRecognitionResult) msg.obj;
                 List<String> results = speechRecognitionResult.getResults();
 
@@ -1055,6 +1079,11 @@ public class TTDetailActivity extends MyActivity
                 break;
         }
 
+    }
+
+    private void showRecordingIndicator() {
+        mLayoutRecordConnected.setVisibility(View.INVISIBLE);
+        mRecordingIndicator.setVisibility(View.VISIBLE);
     }
 
 }

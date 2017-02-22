@@ -8,6 +8,10 @@ import android.widget.AutoCompleteTextView;
 
 import com.boostcamp.jr.thinktank.model.KeywordObserver;
 
+import org.snu.ids.ha.index.Keyword;
+import org.snu.ids.ha.index.KeywordExtractor;
+import org.snu.ids.ha.index.KeywordList;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -137,40 +141,30 @@ public class KeywordUtil {
 //        return ret;
 //    }
 
-//    public static String getKeywordFromContent(String content) {
-//
-//        MyLog.print("1.............................");
-//        MyLog.print("1.............................");
-//        MyLog.print("1.............................");
-//        MyLog.print("1.............................");
-//
-//        // init KeywordExtractor
-//        KeywordExtractor ke = new KeywordExtractor();
-//
-//        MyLog.print("1.............................");
-//
-//        // extract keywords
-//        KeywordList kl = ke.extractKeyword(content, true);
-//
-//        MyLog.print("2...............................");
-//
-//        // print result
-//        for( int i = 0; i < kl.size(); i++ ) {
-//            Keyword kwrd = kl.get(i);
-//        }
-//
-//        MyLog.print("3................................");
-//
-//        int cnt = 0;
-//        while(kl.get(cnt).getCnt()
-//                == (kl.get(cnt+1).getCnt())) {
-//            cnt++;
-//        }
-//
-//        int idx = (int)(Math.random() * cnt);
-//        MyLog.print("idx : " + idx + ".............................");
-//        return kl.get(idx).getString();
-//    }
+    public static String getKeywordFromContent(KeywordExtractor ke, String content) {
+
+        // extract keywords
+        KeywordList kl = ke.extractKeyword(content, true);
+
+        MyLog.print("2...............................");
+
+        // print result
+        for( int i = 0; i < kl.size(); i++ ) {
+            Keyword kwrd = kl.get(i);
+        }
+
+        MyLog.print("3................................");
+
+        int cnt = 0;
+        while(kl.get(cnt).getCnt()
+                == (kl.get(cnt+1).getCnt())) {
+            cnt++;
+        }
+
+        int idx = (int)(Math.random() * cnt);
+        MyLog.print("idx : " + idx + ".............................");
+        return kl.get(idx).getString();
+    }
 
     public static void addAutoCompleteOnTextView(Context context, AutoCompleteTextView textView) {
         List<String> items = KeywordObserver.get().getAllKeywordNames();

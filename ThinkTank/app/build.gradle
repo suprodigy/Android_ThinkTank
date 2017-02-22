@@ -20,6 +20,7 @@ android {
     }
     buildTypes.each {
         it.buildConfigField 'String', 'MY_CLIENT_ID', MyClientId
+//        it.buildConfigField 'String', 'MY_CLIENT_SECRET', MyClientSecret
     }
 }
 
@@ -48,4 +49,5 @@ dependencies {
     compile 'com.muddzdev:styleabletoast:1.0.5'
     compile 'com.naver.speech.clientapi:naverspeech-sdk-android:1.1.2'
     compile 'com.github.sundeepk:compact-calendar-view:1.9.9'
+    compile 'com.wang.avi:library:2.1.3'
 }

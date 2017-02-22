@@ -1,5 +1,7 @@
 package com.boostcamp.jr.thinktank.network;
 
+import com.boostcamp.jr.thinktank.BuildConfig;
+
 import java.io.IOException;
 
 import okhttp3.Interceptor;
@@ -22,7 +24,7 @@ public class NaverRestClient<T> {
     private T service;
     private String baseUrl = "https://openapi.naver.com/";
 
-//    private final String CLIENT_ID = BuildConfig.MY_CLIENT_ID;
+    private final String CLIENT_ID = BuildConfig.MY_CLIENT_ID;
 //    private final String CLIENT_SECRET = BuildConfig.MY_CLIENT_SECRET;
 
     public T getClient(Class<? extends T> type) {
@@ -35,7 +37,7 @@ public class NaverRestClient<T> {
                     Request original = chain.request();
 
                     Request request = original.newBuilder()
-//                            .header("X-Naver-Client-Id", CLIENT_ID)
+                            .header("X-Naver-Client-Id", CLIENT_ID)
 //                            .header("X-Naver-Client-Secret", CLIENT_SECRET)
                             .method(original.method(), original.body())
                             .build();
