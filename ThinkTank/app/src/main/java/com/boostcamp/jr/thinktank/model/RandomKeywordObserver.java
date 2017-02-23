@@ -1,5 +1,8 @@
 package com.boostcamp.jr.thinktank.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.realm.OrderedRealmCollection;
 import io.realm.Realm;
 
@@ -44,6 +47,18 @@ public class RandomKeywordObserver {
         });
     }
 
+    public void createOrUpdate(String keywordName) {
+        Realm realm = Realm.getDefaultInstance();
+
+        RandomKeyword keyword = realm.where(RandomKeyword.class).equalTo("name", keywordName).findFirst();
+
+        if (keyword == null) {
+            insert(new RandomKeyword().setName(keywordName));
+        } else {
+            update(keyword.setCount(keyword.getCount() + 1));
+        }
+    }
+
     public RandomKeyword getKeywordByName(String name) {
         Realm realm = Realm.getDefaultInstance();
 
@@ -61,5 +76,19 @@ public class RandomKeywordObserver {
     public RandomKeyword getCopiedObject(RandomKeyword src) {
         Realm realm = Realm.getDefaultInstance();
         return realm.copyFromRealm(src);
+    }
+
+    public List<String> getAllKeywordNames() {
+        List<String> ret = new ArrayList<>();
+
+        Realm realm = Realm.getDefaultInstance();
+
+        OrderedRealmCollection<RandomKeyword> keywordItems = selectAllOrderByName();
+
+        for (RandomKeyword item : keywordItems) {
+            ret.add(item.getName());
+        }
+
+        return ret;
     }
 }

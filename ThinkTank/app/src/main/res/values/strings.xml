@@ -67,4 +67,7 @@
     <string name="no_keyword_hint">키워드를 생성하세요.</string>
     <string name="generate_randoms_start">키워드를 생성합니다.</string>
 
+    <string name="on_add_memo">메모가 추가되었습니다.</string>
+    <string name="on_update_memo">메모가 수정되었습니다.</string>
+
 </resources>

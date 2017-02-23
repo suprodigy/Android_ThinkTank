@@ -38,9 +38,14 @@
         <activity
             android:name=".image.ImagePagerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".TTRandomMainActivity">
+        <activity
+            android:name=".TTRandomMainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
         </activity>
-        <activity android:name=".TTRandomListActivity">
+        <activity
+            android:name=".TTRandomListActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:parentActivityName=".TTRandomMainActivity">
         </activity>
     </application>
 

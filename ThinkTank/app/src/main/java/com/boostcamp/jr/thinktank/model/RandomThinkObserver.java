@@ -82,7 +82,7 @@ public class RandomThinkObserver {
         return realm.copyFromRealm(item);
     }
 
-    public OrderedRealmCollection<RandomThink> selectThatHasId(String keyword) {
+    public OrderedRealmCollection<RandomThink> selectThatHasKeyword(String keyword) {
         Realm realm = Realm.getDefaultInstance();
 
         return realm.where(RandomThink.class).equalTo("keywords.name", keyword)

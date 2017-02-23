@@ -1,20 +1,35 @@
 package com.boostcamp.jr.thinktank;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.boostcamp.jr.thinktank.model.RandomKeyword;
+import com.boostcamp.jr.thinktank.model.RandomKeywordObserver;
+import com.boostcamp.jr.thinktank.model.RandomThink;
+import com.boostcamp.jr.thinktank.model.RandomThinkObserver;
+import com.boostcamp.jr.thinktank.utils.KeywordUtil;
 import com.boostcamp.jr.thinktank.utils.MyLog;
 import com.boostcamp.jr.thinktank.utils.PhotoUtil;
 import com.github.sundeepk.compactcalendarview.CompactCalendarView;
@@ -38,10 +53,21 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
+import io.realm.OrderedRealmCollection;
+import io.realm.RealmList;
 import me.drakeet.materialdialog.MaterialDialog;
+import uk.co.chrisjenx.calligraphy.CalligraphyUtils;
 
 public class TTRandomMainActivity extends MyActivity
         implements OnMenuItemClickListener {
+
+    private static String EXTRA_ID = "id";
+
+    public static Intent newIntent(Context packageContext, String id) {
+        Intent intent = new Intent(packageContext, TTRandomMainActivity.class);
+        intent.putExtra(EXTRA_ID, id);
+        return intent;
+    }
 
     @BindView(R.id.layout_for_input_think)
     View mLayoutForInputThink;
@@ -57,11 +83,19 @@ public class TTRandomMainActivity extends MyActivity
     CompactCalendarView mCalendar;
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
+    @BindView(R.id.think_content)
+    EditText mThinkContentEditText;
     @BindViews({R.id.think_keyword1, R.id.think_keyword2, R.id.think_keyword3})
     List<TextView> mKeywordTextViews;
+    @BindView(R.id.all_keyword_recycler_view)
+    RecyclerView mAllKeywordRecyclerView;
 
     private ContextMenuDialogFragment mMenuDialogFragment;
     private MaterialDialog mDialog;
+    private boolean mDeleted;
+    private boolean mIsAdded;
+
+    private RandomThink mRandomThink;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,11 +107,74 @@ public class TTRandomMainActivity extends MyActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        setMenuItem();
         setCalendar();
 
-        DesignSpec background = DesignSpec.fromResource(mLayout, R.raw.background);
-        mLayout.setBackground(background);
+        DesignSpec background1 = DesignSpec.fromResource(mLayout, R.raw.background);
+        mLayout.setBackground(background1);
+
+        DesignSpec background2 = DesignSpec.fromResource(mLayoutForAllKeyword, R.raw.background);
+        mLayoutForAllKeyword.setBackground(background2);
+
+        DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
+        mLayoutForCalendar.setBackground(background3);
+
+        mLayout.requestFocus();
+
+        setEventListener();
+        init();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setMenuItem();
+    }
+
+    private void init() {
+        mDeleted = false;
+        String id = getIntent().getStringExtra(EXTRA_ID);
+
+        if (id == null) {
+            setIfItemNotAdded();
+        } else {
+            setIfItemAdded(id);
+        }
+    }
+
+    private void setIfItemNotAdded() {
+        mIsAdded = false;
+        mRandomThink = new RandomThink();
+    }
+
+    private void setIfItemAdded(String id) {
+        mIsAdded = true;
+        RandomThinkObserver observer = RandomThinkObserver.get();
+        RandomThink randomThink = observer.selectItemThatHasId(id);
+        mRandomThink = observer.getCopiedObject(randomThink);
+        setView();
+    }
+
+    private void setView() {
+        RealmList<RandomKeyword> keywords = mRandomThink.getKeywords();
+        for (int i=0; i<keywords.size(); i++) {
+            mKeywordTextViews.get(i).setText("#" + keywords.get(i).getName());
+        }
+        mThinkContentEditText.setText(mRandomThink.getContent());
+    }
+
+    private void setEventListener() {
+        mThinkContentEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                mRandomThink.setContent(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
     private void setMenuItem() {
@@ -93,20 +190,37 @@ public class TTRandomMainActivity extends MyActivity
         MenuObject close = new MenuObject();
         close.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_cancel));
 
-        MenuObject generateRandoms = new MenuObject(getString(R.string.generate_randoms));
-        generateRandoms.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_generate_random));
-
-        MenuObject save = new MenuObject(getString(R.string.save));
-        save.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_save));
-
-        MenuObject select = new MenuObject(getString(R.string.select));
-        select.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_load));
-
         List<MenuObject> menuObjects = new ArrayList<>();
-        menuObjects.add(close);
-        menuObjects.add(generateRandoms);
-        menuObjects.add(save);
-        menuObjects.add(select);
+
+        if (!mIsAdded) {
+            MenuObject generateRandoms = new MenuObject(getString(R.string.generate_randoms));
+            generateRandoms.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_generate_random));
+
+            MenuObject save = new MenuObject(getString(R.string.save));
+            save.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_save));
+
+            MenuObject select = new MenuObject(getString(R.string.select));
+            select.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_load));
+
+            menuObjects.add(close);
+            menuObjects.add(generateRandoms);
+            menuObjects.add(save);
+            menuObjects.add(select);
+        } else {
+            MenuObject save = new MenuObject(getString(R.string.save));
+            save.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_save));
+
+            MenuObject select = new MenuObject(getString(R.string.select));
+            select.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_load));
+
+            MenuObject delete = new MenuObject(getString(R.string.delete_menu));
+            delete.setDrawable(PhotoUtil.getResizedBitmapDrawable(this, R.drawable.ic_think_delete));
+
+            menuObjects.add(close);
+            menuObjects.add(save);
+            menuObjects.add(select);
+            menuObjects.add(delete);
+        }
 
         for (MenuObject menuObject : menuObjects) {
             menuObject.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -122,22 +236,79 @@ public class TTRandomMainActivity extends MyActivity
     public void onMenuItemClick(View clickedView, int position) {
         mMenuDialogFragment.dismiss();
 
-        switch (position) {
-            case 0:
-                break;
-            case 1:
-                new GenerateRandomsTask().execute();
-                break;
-            case 2:
-                onSaveClicked();
-                break;
-            case 3:
-                onSelectClicked();
-                break;
+        if (!mIsAdded) {
+            switch (position) {
+                case 0:
+                    break;
+                case 1:
+                    showLayoutForInputThink();
+                    new GenerateRandomsTask().execute();
+                    break;
+                case 2:
+                    onSaveClicked();
+                    break;
+                case 3:
+                    onSelectClicked();
+                    break;
+            }
+        } else {
+            switch (position) {
+                case 0:
+                    break;
+                case 1:
+                    onSaveClicked();
+                    break;
+                case 2:
+                    onSelectClicked();
+                    break;
+                case 3:
+                    onDeleteClicked();
+                    break;
+            }
         }
     }
 
     private void onSaveClicked() {
+
+        if (mDeleted) {
+            return;
+        }
+
+        String content = mRandomThink.getContent();
+        if (content == null || content.length() == 0 ||
+                mKeywordTextViews.get(1).getText().length() == 0) {
+            return;
+        }
+
+        RandomThinkObserver rtObserver = RandomThinkObserver.get();
+        mIsAdded = (rtObserver.selectItemThatHasId(mRandomThink.getId()) != null);
+
+        if (!mIsAdded) {
+            RealmList<RandomKeyword> keywords = new RealmList<>();
+            for (TextView textView : mKeywordTextViews) {
+                String keywordName = textView.getText().toString();
+                keywordName = KeywordUtil.removeTag(keywordName);
+                RandomKeywordObserver observer = RandomKeywordObserver.get();
+                observer.createOrUpdate(keywordName);
+                keywords.add(observer.getKeywordByName(keywordName));
+            }
+
+            mRandomThink.setKeywords(keywords);
+
+            rtObserver.insert(mRandomThink);
+            StyleableToast.makeText(getApplicationContext(), getString(R.string.on_add_memo),
+                    Toast.LENGTH_SHORT, R.style.StyledToast).show();
+
+            for (TextView textView : mKeywordTextViews) {
+                textView.setText("");
+            }
+            mKeywordTextViews.get(0).setText(getString(R.string.no_keyword_hint));
+            mThinkContentEditText.setText("");
+        } else {
+            rtObserver.update(mRandomThink);
+            StyleableToast.makeText(getApplicationContext(), getString(R.string.on_update_memo),
+                    Toast.LENGTH_SHORT, R.style.StyledToast).show();
+        }
 
     }
 
@@ -179,15 +350,23 @@ public class TTRandomMainActivity extends MyActivity
     }
 
     private void onAllKeywordClicked() {
-
+        new ShowAllKeywordTask().execute();
     }
 
     private void onAllThinkClicked() {
-
+        Intent intent = TTRandomListActivity
+                .newIntent(getApplicationContext(), getString(R.string.all_think));
+        startActivity(intent);
     }
 
     private void onSelectByDateClicked() {
+        showLayoutForCalendar();
+    }
 
+    private void onDeleteClicked() {
+        RandomThinkObserver.get().delete(mRandomThink);
+        mDeleted = true;
+        finish();
     }
 
     private void setCalendar() {
@@ -207,6 +386,13 @@ public class TTRandomMainActivity extends MyActivity
                 mMonthTextView.setText((firstDayOfNewMonth.getMonth() + 1) + "월");
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        onSaveClicked();
+        hideSoftInput();
     }
 
     private class GenerateRandomsTask extends AsyncTask<Void, Integer, Void> {
@@ -273,6 +459,10 @@ public class TTRandomMainActivity extends MyActivity
             textView.startAnimation(in);
         }
 
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            showSoftInput();
+        }
     }
 
     @Override
@@ -295,5 +485,126 @@ public class TTRandomMainActivity extends MyActivity
         }
 
         return super.onOptionsItemSelected(item);
+
     }
+
+    private void showLayoutForInputThink() {
+        mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.INVISIBLE);
+        mLayoutForInputThink.setVisibility(View.VISIBLE);
+    }
+
+    private void showLayoutForAllKeyword() {
+        mLayoutForInputThink.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.INVISIBLE);
+        mLayoutForAllKeyword.setVisibility(View.VISIBLE);
+    }
+
+    private void showLayoutForCalendar() {
+        mLayoutForAllKeyword.setVisibility(View.INVISIBLE);
+        mLayoutForInputThink.setVisibility(View.INVISIBLE);
+        mLayoutForCalendar.setVisibility(View.VISIBLE);
+    }
+
+    private class ShowAllKeywordTask extends AsyncTask<Void, Void, List<String>> {
+        private KeywordAdapter mKeywordAdapter;
+
+        @Override
+        protected List<String> doInBackground(Void... params) {
+            List<String> ret = new ArrayList<>();
+
+            OrderedRealmCollection<RandomKeyword> keywordList = RandomKeywordObserver.get().selectAllOrderByName();
+
+            for (RandomKeyword keyword : keywordList) {
+                ret.add(keyword.getName());
+            }
+
+            return ret;
+        }
+
+        @Override
+        protected void onPostExecute(List<String> keywords) {
+            showLayoutForAllKeyword();
+            mAllKeywordRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+            mKeywordAdapter = new KeywordAdapter(getApplicationContext(), keywords);
+            mAllKeywordRecyclerView.setAdapter(mKeywordAdapter);
+            mAllKeywordRecyclerView.setHasFixedSize(true);
+        }
+    }
+
+    public class KeywordHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
+
+        @BindView(android.R.id.text1)
+        TextView mTextView;
+
+        public KeywordHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+
+        public void bindKeyword(String keywordName) {
+            mTextView.setText("#" + keywordName);
+            mTextView.setGravity(Gravity.CENTER);
+            mTextView.setTextSize(26);
+            mTextView.setTextColor(getColor(R.color.blue));
+            mTextView.setOnClickListener(this);
+
+            CalligraphyUtils.applyFontToTextView(getApplicationContext()
+                    , mTextView, "fonts/NanumPen.ttf");
+        }
+
+        @Override
+        public void onClick(View v) {
+            String keywordName = KeywordUtil.removeTag(mTextView.getText().toString());
+            Intent intent = TTRandomListActivity.newIntent(getApplicationContext(), keywordName);
+            startActivity(intent);
+        }
+
+    }
+
+    private class KeywordAdapter extends RecyclerView.Adapter<KeywordHolder> {
+
+        Context mContext;
+
+        List<String> mKeywords;
+
+        public KeywordAdapter(Context context, List<String> keywords) {
+            mContext = context;
+            mKeywords = keywords;
+        }
+
+        @Override
+        public KeywordHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(mContext)
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+            return new KeywordHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(KeywordHolder holder, int position) {
+            String keywordName = mKeywords.get(position);
+            holder.bindKeyword(keywordName);
+        }
+
+        @Override
+        public int getItemCount() {
+            return (mKeywords == null) ? 0 : mKeywords.size();
+        }
+
+    }
+
+    private void showSoftInput() {
+        ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                .toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+    }
+
+    private void hideSoftInput() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
 }
