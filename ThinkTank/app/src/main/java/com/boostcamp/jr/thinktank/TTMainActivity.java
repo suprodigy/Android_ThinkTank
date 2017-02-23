@@ -120,8 +120,6 @@ public class TTMainActivity extends MyActivity
 
         isStoragePermissionGranted();
 
-        setMainAutoComplete();
-
         setMenuItems();
 
         setCalendar();
@@ -135,7 +133,7 @@ public class TTMainActivity extends MyActivity
         DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
         mLayoutForCalendar.setBackground(background3);
 
-//        new TestTask().execute();
+        new TestTask().execute();
     }
 
     private void setMainAutoComplete() {
@@ -182,7 +180,7 @@ public class TTMainActivity extends MyActivity
                 textView.setLayoutParams(params);
                 textView.setGravity(Gravity.CENTER);
                 textView.setMaxLines(1);
-                textView.setEllipsize(TextUtils.TruncateAt.END);
+                textView.setEllipsize(TextUtils.TruncateAt.MARQUEE);
                 CalligraphyUtils.applyFontToTextView(this, textView, "fonts/NanumPen.ttf");
                 mLayoutShowKeyword.addView(textView);
                 mTextViews.add(textView);
@@ -225,6 +223,7 @@ public class TTMainActivity extends MyActivity
         super.onResume();
         showTitle();
         initLayoutShowKeyword();
+        setMainAutoComplete();
     }
 
     @Override
@@ -466,13 +465,14 @@ public class TTMainActivity extends MyActivity
 
                 float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
                 textView.setTextSize(textSize);
+                MyLog.print(textSize + "");
 
                 if (i == 0) {
                     textView.setTextColor(getColor(R.color.red));
                 } else {
-                    if (textSize > 25 && textSize <= 30) {
+                    if (textSize > 21 && textSize <= 25) {
                         textView.setTextColor(getColor(R.color.blue1));
-                    } else if (textSize >= 20 && textSize <= 25) {
+                    } else if (textSize >= 18 && textSize <= 21) {
                         textView.setTextColor(getColor(R.color.blue2));
                     } else {
                         textView.setTextColor(getColor(R.color.blue3));

@@ -1,15 +1,13 @@
 package com.boostcamp.jr.thinktank;
 
-import com.boostcamp.jr.thinktank.network.NaverRestClient;
-import com.boostcamp.jr.thinktank.network.ResponseFromNaver;
+import android.support.v4.util.Pair;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.PriorityQueue;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -21,35 +19,30 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
 
-        String content = "메모";
-
-        NaverRestClient<NaverRestClient.KeywordService> client = new NaverRestClient<>();
-        NaverRestClient.KeywordService service = client.getClient(NaverRestClient.KeywordService.class);
-
-        Call<ResponseFromNaver> call = service.getKeywordsFromNaver("search", "blog.json", content);
-        call.enqueue(new Callback<ResponseFromNaver>() {
-            @Override
-            public void onResponse(Call<ResponseFromNaver> call, Response<ResponseFromNaver> response) {
-
-                if (response.isSuccessful()) {
-                    ResponseFromNaver responseFromNaver = response.body();
-                    System.out.println(responseFromNaver.getCount() + "");
-                    List<ResponseFromNaver.Item> items = responseFromNaver.getItems();
-                    for (ResponseFromNaver.Item item : items) {
-                        System.out.println(item.getTitle());
+        PriorityQueue<Pair<Integer, Integer>> pq = new PriorityQueue<>(10,
+                new Comparator<Pair<Integer, Integer>>(){
+                    @Override
+                    public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
+                        return o2.second.compareTo(o1.second);
                     }
-                } else {
-                    System.out.println("호출 실패 :" + response.errorBody());
-                }
+                });
 
-            }
+        List<Pair<Integer, Integer>> list = new ArrayList<>();
 
-            @Override
-            public void onFailure(Call<ResponseFromNaver> call, Throwable t) {
-                System.out.println("오류 발생");
-                t.printStackTrace();
-            }
-        });
+        for (int i=0; i<10; i++) {
+            Pair<Integer, Integer> pair = new Pair<>(i, 1);
+            list.add(pair);
+        }
+
+        for (int i=9; i>=0; i--) {
+            pq.offer(list.get(i));
+        }
+
+        while (!pq.isEmpty()) {
+            Pair<Integer, Integer> now = pq.poll();
+
+            System.out.println(now.first);
+        }
 
     }
 }
