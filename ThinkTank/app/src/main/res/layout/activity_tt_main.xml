@@ -30,11 +30,18 @@
             app:cardCornerRadius="8dp"
             app:contentPadding="1dp">
 
-            <android.support.v7.widget.GridLayout
-                android:id="@+id/layout_show_keyword"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:columnCount="5"/>
+            <HorizontalScrollView
+                android:id="@+id/scroll_view"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
+
+                <android.support.v7.widget.GridLayout
+                    android:id="@+id/layout_show_keyword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:columnCount="5"/>
+
+            </HorizontalScrollView>
 
             <FrameLayout
                 android:id="@+id/layout_progress_bar"

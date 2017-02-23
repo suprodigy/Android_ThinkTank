@@ -88,15 +88,18 @@ public class KeywordUtil {
     public static float getTextSize(int count, Pair<Integer, Integer> minMaxCount) {
 
         int min = minMaxCount.first, max = minMaxCount.second;
+        MyLog.print(min + ", " + max);
 
         if (min == max) {
             return (30 + 15) / 2;
         } else {
 
             // y = ax + b (y: textSize, x: keyword.getCount())
-            float a = 15 / (max - min);
-            float b = 15 - a * min;
+            float a = (float) 15 / (max - min);
+            float b = (float) 15 - a * min;
 
+            MyLog.print(count + "");
+            MyLog.print("a: " + a + ", " + "b: " + b);
             return a * count + b;
         }
 

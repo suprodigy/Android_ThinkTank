@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Pair;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -84,6 +86,8 @@ public class TTMainActivity extends MyActivity
     TextView mMonthTextView;
     @BindView(R.id.calendar_view)
     CompactCalendarView mCalendar;
+    @BindView(R.id.scroll_view)
+    HorizontalScrollView mScrollView;
 
     private Menu mMenu;
 
@@ -133,7 +137,7 @@ public class TTMainActivity extends MyActivity
         DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
         mLayoutForCalendar.setBackground(background3);
 
-        new TestTask().execute();
+        //new TestTask().execute();
     }
 
     private void setMainAutoComplete() {
@@ -178,6 +182,7 @@ public class TTMainActivity extends MyActivity
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams(
                         GridLayout.spec(GridLayout.UNDEFINED, 1f), GridLayout.spec(GridLayout.UNDEFINED, 1f));
                 textView.setLayoutParams(params);
+                textView.setPadding(8, 0, 8, 0);
                 textView.setGravity(Gravity.CENTER);
                 textView.setMaxLines(1);
                 textView.setEllipsize(TextUtils.TruncateAt.MARQUEE);
@@ -464,15 +469,14 @@ public class TTMainActivity extends MyActivity
                 textView.startAnimation(in);
 
                 float textSize = KeywordUtil.getTextSize(mKeywordList.get(i).second, mMinMaxCount);
-                textView.setTextSize(textSize);
-                MyLog.print(textSize + "");
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
 
                 if (i == 0) {
                     textView.setTextColor(getColor(R.color.red));
                 } else {
-                    if (textSize > 21 && textSize <= 25) {
+                    if (textSize > 25 && textSize <= 35) {
                         textView.setTextColor(getColor(R.color.blue1));
-                    } else if (textSize >= 18 && textSize <= 21) {
+                    } else if (textSize >= 20 && textSize <= 25) {
                         textView.setTextColor(getColor(R.color.blue2));
                     } else {
                         textView.setTextColor(getColor(R.color.blue3));
@@ -504,13 +508,17 @@ public class TTMainActivity extends MyActivity
                         return true;
                     }
                 });
+
+                int vLeft = mTextViews.get(2).getLeft();
+                int vRight = mTextViews.get(2).getRight();
+                int sWidth = mScrollView.getWidth();
+                mScrollView.scrollTo(((vLeft + vRight - sWidth) / 2) , 0);
             }
         }
 
         public void setIsCancelled(boolean flag) {
             mIsCancelled = flag;
         }
-
     }
 
     private class ShowAllKeywordTask extends AsyncTask<Void, Void, List<String>> {
