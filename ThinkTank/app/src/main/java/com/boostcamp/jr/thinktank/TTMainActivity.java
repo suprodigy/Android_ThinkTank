@@ -137,7 +137,7 @@ public class TTMainActivity extends MyActivity
         DesignSpec background3 = DesignSpec.fromResource(mLayoutForCalendar, R.raw.background);
         mLayoutForCalendar.setBackground(background3);
 
-        //new TestTask().execute();
+//        new TestTask().execute();
     }
 
     private void setMainAutoComplete() {
