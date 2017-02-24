@@ -477,6 +477,7 @@ public class TTRandomMainActivity extends MyActivity
         int id = item.getItemId();
 
         if (id == R.id.action_more) {
+            hideSoftInput();
             mMenuDialogFragment.show(getSupportFragmentManager(), "ContextMenuDialogFragment");
             return true;
         } else if (id == android.R.id.home) {

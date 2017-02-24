@@ -128,8 +128,8 @@ public class TTMainActivity extends MyActivity
 
         setCalendar();
 
-        DesignSpec background1 = DesignSpec.fromResource(mLayoutShowKeyword, R.raw.background);
-        mLayoutShowKeyword.setBackground(background1);
+        DesignSpec background1 = DesignSpec.fromResource(mScrollView, R.raw.background);
+        mScrollView.setBackground(background1);
 
         DesignSpec background2 = DesignSpec.fromResource(mLayoutForAllKeyword, R.raw.background);
         mLayoutForAllKeyword.setBackground(background2);
@@ -474,7 +474,7 @@ public class TTMainActivity extends MyActivity
                 if (i == 0) {
                     textView.setTextColor(getColor(R.color.red));
                 } else {
-                    if (textSize > 25 && textSize <= 35) {
+                    if (textSize > 25 && textSize <= 30) {
                         textView.setTextColor(getColor(R.color.blue1));
                     } else if (textSize >= 20 && textSize <= 25) {
                         textView.setTextColor(getColor(R.color.blue2));

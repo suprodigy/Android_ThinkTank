@@ -32,11 +32,12 @@
 
             <HorizontalScrollView
                 android:id="@+id/scroll_view"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
                 <android.support.v7.widget.GridLayout
                     android:id="@+id/layout_show_keyword"
+                    android:layout_gravity="center"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     app:columnCount="5"/>

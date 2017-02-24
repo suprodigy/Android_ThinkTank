@@ -26,10 +26,10 @@ import retrofit2.Response;
 
 public class TestUtil {
 
-    public static String[] keywordList = { "Android", "액티비티", "패키지", "레이아웃", "설정", "HTTP요청", "AsyncTask",
-            "JSON", "RecyclerView", "인텐트", "미디어 타입", "생애주기", "로더", "Preference", "리소스", "SQLite",
-            "유닛테스트", "ContentProvider", "커서", "서비스", "IntentService", "PendingIntent", "ForegroundService",
-            "스케쥴링 잡", "BroadcastReceiver"};
+    public static String[] keywordList = { "놓치다", "대기", "독립", "돌아보다", "또다시", "머릿속", "북쪽",
+            "불안하다", "쇠고기", "위반", "주", "카드", "평생", "해당하다", "간부", "관념", "굉장히", "단어",
+            "덮다", "도와주다", "도입", "몰다", "배우", "비추다", "신발", "알", "앞서다", "여건", "오래전",
+            "자격", "통제", "계단", "김치", "끄덕이다", "낯설다", "높이", "닮다", "마음속", "못지않다"};
 
     public static void generateThink(Context context) {
         ThinkItem thinkItem = new ThinkItem();
